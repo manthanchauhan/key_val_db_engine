@@ -2,6 +2,8 @@ package shell
 
 import (
 	"bitcask/commands"
+	"bitcask/config/constants"
+	"bitcask/utils"
 	"bufio"
 	"fmt"
 	"os"
@@ -30,20 +32,58 @@ func Start() {
 
 		operation := strings.ToUpper(words[0])
 
-		if operation == "EXIT" {
+		if operation == constants.CommandExit {
 			break
 		}
 
 		switch operation {
-		case "WRITE":
-			commands.WriteCommand(command)
+		case constants.CommandWrite:
+			writeCommandShell(command)
 			break
-		case "READ":
-			val := commands.ReadCommand(command)
+		case constants.CommandRead:
+			val := readCommandShell(command)
 			fmt.Println(val)
 			break
 		default:
 			fmt.Println("Invalid input")
+		}
+	}
+}
+
+func readCommandShell(command string) string {
+	if utils.IsExecutionModeProduction() {
+		defer getDefer()
+	}
+
+	op, err := commands.ReadCommand(command)
+	if err != nil {
+		panic(err)
+	}
+
+	return op
+}
+
+func writeCommandShell(command string) {
+	if utils.IsExecutionModeProduction() {
+		defer getDefer()
+	}
+
+	err := commands.WriteCommand(command)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func getDefer() func() {
+	return func() {
+		if r := recover(); r != nil {
+			_, ok := r.(string)
+
+			if ok {
+				fmt.Println(r)
+			} else {
+				fmt.Println(r.(error).Error())
+			}
 		}
 	}
 }

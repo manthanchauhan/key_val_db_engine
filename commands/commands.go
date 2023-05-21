@@ -1,54 +1,74 @@
 package commands
 
 import (
+	"bitcask/config/constants"
 	"bitcask/dataIO"
-	"bitcask/utils"
-	"fmt"
+	"errors"
 	"strings"
 )
 
-func ReadCommand(command string) string {
-	if utils.IsExecutionModeProduction() {
-		defer getDefer()()
+func Exec(command string) (string, error) {
+	words := strings.Split(command, " ")
+
+	if len(words) == 0 {
+		return "", errors.New("invalid input")
 	}
+
+	operation := strings.ToUpper(words[0])
+
+	if operation == constants.CommandExit {
+		return "", nil
+	}
+
+	switch operation {
+	case constants.CommandWrite:
+		return "", WriteCommand(command)
+	case constants.CommandRead:
+		return ReadCommand(command)
+	default:
+		return "", errors.New("invalid input")
+	}
+}
+
+func ReadCommand(command string) (op string, err error) {
+	defer getDefer(&err)()
 
 	words := strings.Split(command, " ")
 
 	if len(words) < 2 {
-		panic("Invalid input")
+		return "", errors.New("invalid input")
 	}
 
 	key := words[1]
-	return dataIO.Read(key)
+	return dataIO.Read(key), nil
 }
 
-func WriteCommand(command string) {
-	if utils.IsExecutionModeProduction() {
-		defer getDefer()()
-	}
+func WriteCommand(command string) (err error) {
+	defer getDefer(&err)()
 
 	words := strings.Split(command, " ")
 
 	if len(words) < 3 {
-		panic("Invalid input")
+		return errors.New("invalid input")
 	}
 
 	key := words[1]
 	value := strings.Join(words[2:], " ")
 
 	dataIO.Write(key, value)
+	return nil
 }
 
-func getDefer() func() {
+func getDefer(err *error) func() {
 	return func() {
 		if r := recover(); r != nil {
-			_, ok := r.(string)
+			var ok bool
 
-			if ok {
-				fmt.Println(r)
-			} else {
-				fmt.Println(r.(error))
+			if *err, ok = r.(error); !ok {
+				*err = errors.New(r.(string))
 			}
+
+			return
 		}
 	}
 }

@@ -31,15 +31,16 @@ func readOldKey() {
 func read(k string) (v string) {
 	defer func() {
 		if r := recover(); r != nil {
-			var ok bool
-
-			if v, ok = r.(string); !ok {
-				panic(r)
-			}
+			err := r.(error)
+			v = err.Error()
 		}
 	}()
 
-	v = commands.ReadCommand(fmt.Sprintf("READ %s", k))
+	var err error
+
+	if v, err = commands.ReadCommand(fmt.Sprintf("%s %s", constants.CommandRead, k)); err != nil {
+		panic(err)
+	}
 
 	return v
 }

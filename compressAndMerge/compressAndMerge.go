@@ -2,6 +2,8 @@ package compressAndMerge
 
 import (
 	"bitcask/disk"
+	"io/fs"
+	"syscall"
 	"time"
 )
 
@@ -17,6 +19,16 @@ func CompressionAndMergingGoRoutine() {
 }
 
 func compressAndMerge() {
+	defer func() {
+		if r := recover(); r != nil {
+			if err, ok := r.(*fs.PathError); ok && err.Err == syscall.ENOENT {
+				return
+			} else {
+				panic(r)
+			}
+		}
+	}()
+
 	compress()
 	merge()
 }
