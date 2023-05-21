@@ -1,20 +1,19 @@
 package tcp
 
 import (
-	"fmt"
+	"bitcask/config/constants"
 	"net"
 	"os"
 )
 
-func startServer() {
-	arguments := os.Args
-	if len(arguments) == 1 {
-		fmt.Println("Please provide a port number!")
-		return
+func StartServer() {
+	port := os.Getenv(constants.TcpPort)
+
+	if port == "" {
+		panic("Set PORT in env")
 	}
 
-	PORT := ":" + arguments[1]
-	l, err := net.Listen("tcp4", PORT)
+	l, err := net.Listen("tcp4", ":"+port)
 	if err != nil {
 		panic(err)
 	}
@@ -30,10 +29,12 @@ func startServer() {
 }
 
 func listenToConnRequests(l net.Listener) {
+	println("Listening to requests ...")
+
 	for {
 		c, err := l.Accept()
 		if err != nil {
-			panic(err) // todo
+			panic(err)
 		}
 		go handleConnection(c)
 	}

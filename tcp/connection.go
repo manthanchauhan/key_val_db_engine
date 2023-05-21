@@ -5,6 +5,7 @@ import (
 	"bitcask/config/constants"
 	"bufio"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 )
@@ -12,9 +13,13 @@ import (
 func handleConnection(c net.Conn) {
 	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
 
+	writeOutput("Connected", c)
+
 	for {
 		input, err := readInput(c)
-		if err != nil {
+		if err == io.EOF {
+			break
+		} else if err != nil {
 			panic(err)
 		}
 
@@ -35,6 +40,9 @@ func handleConnection(c net.Conn) {
 	if err != nil {
 		panic(err)
 	}
+
+	fmt.Printf("Disconnected from %s\n", c.RemoteAddr().String())
+
 }
 
 func readInput(c net.Conn) (string, error) {
@@ -48,6 +56,10 @@ func readInput(c net.Conn) (string, error) {
 }
 
 func writeOutput(output string, c net.Conn) {
+	if output != "" {
+		output += "\n"
+	}
+
 	_, err := c.Write([]byte(output))
 
 	if err != nil {
