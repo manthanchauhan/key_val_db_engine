@@ -52,7 +52,7 @@ func Start() {
 
 func readCommandShell(command string) string {
 	if utils.IsExecutionModeProduction() {
-		defer getDefer()
+		defer getDefer()()
 	}
 
 	op, err := commands.ReadCommand(command)
@@ -65,7 +65,7 @@ func readCommandShell(command string) string {
 
 func writeCommandShell(command string) {
 	if utils.IsExecutionModeProduction() {
-		defer getDefer()
+		defer getDefer()()
 	}
 
 	err := commands.WriteCommand(command)
