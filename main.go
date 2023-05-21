@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bitcask/compressAndMerge"
 	"bitcask/disk"
 	"bitcask/hashIndex"
 	"bitcask/shell"
@@ -11,7 +12,7 @@ import (
 func initialize() {
 	disk.SetLatestSegmentFileName()
 	hashIndex.Build()
-	//go compressAndMerge.CompressionAndMergingGoRoutine()
+	go compressAndMerge.CompressionAndMergingGoRoutine()
 }
 
 func main() {

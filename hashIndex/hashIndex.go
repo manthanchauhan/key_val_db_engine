@@ -4,12 +4,14 @@ import (
 	"bitcask/config/constants"
 	"bitcask/disk"
 	"bitcask/utils"
+	"sync"
 )
 
 var hashMap = map[string]string{}
+var hashMapMutex = &sync.RWMutex{}
 
 func GetDataLocation(key string) string {
-	dataLocation, ok := hashMap[key]
+	dataLocation, ok := Get(key)
 
 	if ok != true {
 		panic(constants.NotFoundMsg)
@@ -18,8 +20,18 @@ func GetDataLocation(key string) string {
 	return dataLocation
 }
 
-func SetByteOffset(key string, offset string) {
-	hashMap[key] = offset
+func Get(key string) (string, bool) {
+	hashMapMutex.Lock()
+	val, ok := hashMap[key]
+	hashMapMutex.Unlock()
+
+	return val, ok
+}
+
+func Set(key string, val string) {
+	hashMapMutex.Lock()
+	hashMap[key] = val
+	hashMapMutex.Unlock()
 }
 
 func Build() {
@@ -28,14 +40,16 @@ func Build() {
 	dataSegmentFileNames := disk.GetDataSegmentFileNameList()
 
 	for _, fileName := range dataSegmentFileNames {
-		ImportDataSegment(fileName)
+		ImportDataSegment(fileName, nil)
 	}
 
 }
 
-func ImportDataSegment(fileName string) {
+func ImportDataSegment(fileName string, initValCheck func(k string) bool) {
 	disk.ParseDataSegment(fileName, func(k string, v string, byteOffset int64) {
-		dataLocation := utils.GetDataLocationFromByteOffset(fileName, byteOffset)
-		SetByteOffset(k, dataLocation)
+		if initValCheck == nil || initValCheck(k) {
+			dataLocation := utils.GetDataLocationFromByteOffset(fileName, byteOffset)
+			Set(k, dataLocation)
+		}
 	})
 }

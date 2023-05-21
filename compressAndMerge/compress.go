@@ -27,7 +27,7 @@ func compressSegment(fileName string) {
 		if newFileIsEmpty {
 			disk.DeleteSegment(newFileName)
 		} else {
-			hashIndex.ImportDataSegment(newFileName)
+			hashIndex.ImportDataSegment(newFileName, hashMapImportSegmentInitValCheckForCompression(fileName))
 		}
 
 		disk.DeleteSegment(fileName)
@@ -53,4 +53,17 @@ func createCompressedSegment(originalSegmentFileName string) string {
 	})
 
 	return newFileName
+}
+
+func hashMapImportSegmentInitValCheckForCompression(compressedFileName string) func(k string) bool {
+	return func(k string) bool {
+		val, ok := hashIndex.Get(k)
+
+		if !ok {
+			return false
+		}
+
+		initFileName, _ := disk.ExtractFileNameAndOffset(val)
+		return initFileName == compressedFileName
+	}
 }

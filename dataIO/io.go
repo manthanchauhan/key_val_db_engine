@@ -16,5 +16,5 @@ func Read(key string) string {
 
 func Write(key string, val string) {
 	dataLocation := disk.Write(key, val)
-	hashIndex.SetByteOffset(key, dataLocation)
+	hashIndex.Set(key, dataLocation)
 }

@@ -1,14 +1,12 @@
 package test
 
 import (
-	"bitcask/commands"
-	"bitcask/config/constants"
 	"bitcask/utils"
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 )
-import "github.com/google/uuid"
 
 var hashMap = map[string]string{}
 var testHashMap = map[int]int{}
@@ -71,69 +69,31 @@ func runTests() {
 		}
 	}
 
-	print(testHashMap)
+	println()
+	for k, v := range testHashMap {
+		testName := ""
+
+		switch k {
+		case 0:
+			testName = "WRITE NEW"
+		case 1:
+			testName = "READ NEW"
+		case 2:
+			testName = "WRITE OLD"
+		case 3:
+			testName = "READ OLD"
+		}
+		fmt.Printf("%s - %s\n", testName, strconv.Itoa(v))
+	}
+	println()
 
 	println("tests completed successfully")
-}
-
-func write(k string, v string) {
-	commands.WriteCommand(fmt.Sprintf("WRITE %s %s", k, v))
-	hashMap[k] = v
-}
-
-func writeNewKey() {
-	k := uuid.New().String()
-	v := randStr(rand.Intn(100))
-	write(k, v)
-}
-
-func writeOldKey() {
-	k := pickRandomKey()
-	v := randStr(rand.Intn(100))
-	write(k, v)
-}
-
-func readNewKey() {
-	k := uuid.New().String()
-	v := read(k)
-
-	hashedV := hashMap[k]
-	if v != constants.NotFoundMsg && v != hashedV {
-		panic("Err")
-	}
-}
-
-func readOldKey() {
-	k := pickRandomKey()
-	v := read(k)
-
-	hashedV := hashMap[k]
-
-	if v != hashedV {
-		panic("Err")
-	}
-}
-
-func read(k string) (v string) {
-	defer func() {
-		if r := recover(); r != nil {
-			var ok bool
-
-			if v, ok = r.(string); !ok {
-				panic(r)
-			}
-		}
-	}()
-
-	v = commands.ReadCommand(fmt.Sprintf("READ %s", k))
-
-	return v
 }
 
 func pickRandomKey() string {
 	var keys []string
 
-	for k, _ := range hashMap {
+	for k := range hashMap {
 		keys = append(keys, k)
 	}
 

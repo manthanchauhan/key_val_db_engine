@@ -5,6 +5,7 @@ import (
 	"bitcask/disk"
 	"bitcask/disk/dataSegment"
 	"bitcask/hashIndex"
+	"bitcask/utils"
 	"os"
 )
 
@@ -33,7 +34,7 @@ func merge() {
 		}
 
 		mergedSegmentFileName := mergeSegments(fileNames[start:end])
-		hashIndex.ImportDataSegment(mergedSegmentFileName)
+		hashIndex.ImportDataSegment(mergedSegmentFileName, hashMapImportSegmentInitValCheckForMerging(fileNames[start:end]))
 
 		deleteSegments(fileNames[start:end])
 
@@ -61,5 +62,18 @@ func mergeSegments(fileNames []string) string {
 func deleteSegments(fileNames []string) {
 	for _, fileName := range fileNames {
 		disk.DeleteSegment(fileName)
+	}
+}
+
+func hashMapImportSegmentInitValCheckForMerging(mergedFileNames []string) func(k string) bool {
+	return func(k string) bool {
+		val, ok := hashIndex.Get(k)
+
+		if !ok {
+			return false
+		}
+
+		initFileName, _ := disk.ExtractFileNameAndOffset(val)
+		return utils.Contains(mergedFileNames, initFileName)
 	}
 }
