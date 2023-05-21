@@ -10,7 +10,7 @@ import (
 )
 
 func initialize() {
-	disk.SetLatestSegmentFileName()
+	disk.FindLatestSegmentFileName()
 	hashIndex.Build()
 	go compressAndMerge.CompressionAndMergingGoRoutine()
 }

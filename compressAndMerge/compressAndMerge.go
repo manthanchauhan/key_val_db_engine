@@ -23,7 +23,7 @@ func compressAndMerge() {
 
 func getReadOnlySegmentFileNames() []string {
 	segmentFileNames := disk.GetDataSegmentFileNameList()
-	readOnlySegmentFileNames := make([]string, len(segmentFileNames)-1)
+	readOnlySegmentFileNames := make([]string, len(segmentFileNames))
 	i := 0
 
 	for _, fileName := range segmentFileNames {
@@ -33,5 +33,5 @@ func getReadOnlySegmentFileNames() []string {
 		}
 	}
 
-	return readOnlySegmentFileNames
+	return readOnlySegmentFileNames[:i]
 }

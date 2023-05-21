@@ -14,22 +14,17 @@ var testHashMap = map[int]int{}
 func RunTests() {
 	defer func() {
 		if r := recover(); r != nil {
-			err := os.RemoveAll(utils.GetDataDirectory())
-			if err != nil {
-				panic(err)
-			}
-
-			err = os.Mkdir(utils.GetDataDirectory(), 0777)
-			if err != nil {
-				panic(err)
-			}
-
+			clearDataLogs()
 			panic(r)
 		}
 	}()
 
 	runTests()
 
+	clearDataLogs()
+}
+
+func clearDataLogs() {
 	err := os.RemoveAll(utils.GetDataDirectory())
 	if err != nil {
 		panic(err)

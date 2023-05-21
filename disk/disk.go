@@ -64,14 +64,14 @@ func GetSegmentFileSize(fileName string) int64 {
 }
 
 func DeleteSegment(fileName string) {
+	if fileName == LatestSegmentName {
+		panic("Deleting latest segment")
+	}
+
 	err := os.Remove(utils.GetDataDirectory() + fileName)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func GetBlockSize(key string, val string) int64 {
-	return int64(len(key)) + int64(len(val)) + int64(len(constants.LogKeyValDelim)) + int64(len(constants.LogNewLineDelim))
 }
 
 func GetLogFile(fileName string, flag int) (*os.File, func(file *os.File)) {
@@ -102,25 +102,33 @@ func ExtractFileNameAndOffset(dataLocation string) (string, int64) {
 	return fileName, int64(byteOffset)
 }
 
-func SetLatestSegmentFileName() {
+func FindLatestSegmentFileName() {
 	dataSegmentFileNames := GetDataSegmentFileNameList()
 	createdAtMax := time.Time{}
+	latestSegmentFileName := ""
 
 	for _, fileName := range dataSegmentFileNames {
 		createdAt := GetCreatedAtFromSegmentFileName(fileName)
 
 		if createdAt.After(createdAtMax) {
 			createdAtMax = createdAt
-			LatestSegmentName = fileName
+			latestSegmentFileName = fileName
 		}
 	}
 
-	if LatestSegmentName == "" {
+	if latestSegmentFileName == "" {
 		createNextDataSegment()
+	} else {
+		SetLatestSegmentFileName(latestSegmentFileName)
 	}
 }
+
+func SetLatestSegmentFileName(fileName string) {
+	LatestSegmentName = fileName
+}
+
 func CreateNewDataSegment() string {
-	fileName := fmt.Sprintf(constants.LogFileNameFormat, strconv.FormatInt(time.Now().UnixMilli(), 10))
+	fileName := fmt.Sprintf(constants.LogFileNameFormat, strconv.FormatInt(time.Now().UnixNano(), 10))
 
 	file, err := os.Create(utils.GetDataDirectory() + fileName)
 	if err != nil {
@@ -143,7 +151,8 @@ func CreateNewDataSegment() string {
 }
 
 func createNextDataSegment() {
-	LatestSegmentName = CreateNewDataSegment()
+	latestSegmentFileName := CreateNewDataSegment()
+	SetLatestSegmentFileName(latestSegmentFileName)
 }
 
 func GetDataSegmentFileNameList() []string {
