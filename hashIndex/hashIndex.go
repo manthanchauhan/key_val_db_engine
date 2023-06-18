@@ -7,11 +7,15 @@ import (
 	"sync"
 )
 
+//type HashIndex struct {
+//	hashMap *map[string]string{}
+//}
+
 var hashMap = map[string]string{}
 var hashMapMutex = &sync.RWMutex{}
 
-func GetDataLocation(key string) string {
-	dataLocation, ok := Get(key)
+func GetDataLocationOrPanic(key string) string {
+	dataLocation, ok := GetDataLocation(key)
 
 	if ok != true {
 		panic(constants.NotFoundMsg)
@@ -20,7 +24,7 @@ func GetDataLocation(key string) string {
 	return dataLocation
 }
 
-func Get(key string) (string, bool) {
+func GetDataLocation(key string) (string, bool) {
 	hashMapMutex.Lock()
 	val, ok := hashMap[key]
 	hashMapMutex.Unlock()
@@ -37,12 +41,13 @@ func Set(key string, val string) {
 func Build() {
 	hashMap = map[string]string{}
 
+	disk.FindLatestSegmentFileName()
+
 	dataSegmentFileNames := disk.GetDataSegmentFileNameList()
 
 	for _, fileName := range dataSegmentFileNames {
 		ImportDataSegment(fileName, nil)
 	}
-
 }
 
 func ImportDataSegment(fileName string, initValCheck func(k string) bool) {

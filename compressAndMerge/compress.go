@@ -39,13 +39,13 @@ func compressSegment(fileName string) {
 func createCompressedSegment(originalSegmentFileName string) string {
 	newFileName := disk.CreateNewDataSegment()
 
-	f, deferFunc := disk.GetLogFile(newFileName, os.O_WRONLY|os.O_APPEND)
+	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+newFileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
 	disk.ParseDataSegment(originalSegmentFileName, func(k string, v string, byteOffset int64) {
 		dataLocation := utils.GetDataLocationFromByteOffset(originalSegmentFileName, byteOffset)
 
-		isUsed := dataLocation == hashIndex.GetDataLocation(k)
+		isUsed := dataLocation == hashIndex.GetDataLocationOrPanic(k)
 
 		if isUsed {
 			dataSegment.Write(k, v, f)
@@ -57,7 +57,7 @@ func createCompressedSegment(originalSegmentFileName string) string {
 
 func hashMapImportSegmentInitValCheckForCompression(compressedFileName string) func(k string) bool {
 	return func(k string) bool {
-		val, ok := hashIndex.Get(k)
+		val, ok := hashIndex.GetDataLocation(k)
 
 		if !ok {
 			return false

@@ -17,9 +17,19 @@ func GetBlockSize(key string, val string) int64 {
 
 func GetDataDirectory() string {
 	if IsExecutionModeProduction() {
-		return "/Users/manthan/GolandProjects/bitcask/dataLogs/"
+		switch GetIndexType() {
+		case constants.IndexTypeLSMIndex:
+			return "/Users/manthan/GolandProjects/bitcask/dataLogs/LsmIndexDataLogs/"
+		default:
+			return "/Users/manthan/GolandProjects/bitcask/dataLogs/"
+		}
 	} else {
-		return "/Users/manthan/GolandProjects/bitcask/dataLogsTest/"
+		switch GetIndexType() {
+		case constants.IndexTypeLSMIndex:
+			return "/Users/manthan/GolandProjects/bitcask/dataLogsTest/LsmIndexDataLogs/"
+		default:
+			return "/Users/manthan/GolandProjects/bitcask/dataLogs/"
+		}
 	}
 }
 
@@ -38,4 +48,8 @@ func Contains(s []string, e string) bool {
 
 func GetClientType() string {
 	return os.Getenv(constants.ClientType)
+}
+
+func GetIndexType() string {
+	return os.Getenv(constants.IndexType)
 }

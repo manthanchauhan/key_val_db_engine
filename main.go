@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bitcask/compressAndMerge"
 	"bitcask/config/constants"
-	"bitcask/disk"
-	"bitcask/hashIndex"
+	"bitcask/dataIO"
+	"bitcask/logger"
 	"bitcask/shell"
 	"bitcask/tcp"
 	"bitcask/test"
@@ -12,19 +11,17 @@ import (
 )
 
 func main() {
-	initialize()
+	logger.Init()
+
+	logger.SugaredLogger.Info("Hello World")
+
+	dataIO.Init()
 
 	if !utils.IsExecutionModeProduction() {
 		test.RunTests()
 	} else {
 		start()
 	}
-}
-
-func initialize() {
-	disk.FindLatestSegmentFileName()
-	hashIndex.Build()
-	go compressAndMerge.CompressionAndMergingGoRoutine()
 }
 
 func start() {

@@ -15,10 +15,10 @@ import (
 
 var LatestSegmentName = ""
 
-func Read(dataLocation string) string {
+func Read(dataLocation string, dataDirectory string) string {
 	fileName, byteOffset := ExtractFileNameAndOffset(dataLocation)
 
-	f, deferFunc := GetLogFile(fileName, os.O_RDONLY)
+	f, deferFunc := GetLogFile(dataDirectory+fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	_, err := f.Seek(byteOffset, 0)
@@ -37,19 +37,25 @@ func Read(dataLocation string) string {
 func Write(key string, val string) string {
 	logFileName := LatestSegmentName
 
-	f, deferFunc := GetLogFile(logFileName, os.O_APPEND|os.O_WRONLY)
+	dataLocation := WriteInDataSegment(key, val, logFileName)
+
+	if fileSize := GetSegmentFileSize(logFileName); fileSize >= constants.LogFileMaxSizeBytes {
+		createNextDataSegment()
+	}
+
+	return dataLocation
+}
+
+func WriteInDataSegment(key string, val string, fileName string) string {
+	f, deferFunc := GetLogFile(fileName, os.O_APPEND|os.O_WRONLY)
 	defer deferFunc(f)
 
 	byteCount := dataSegment.Write(key, val, f)
 
-	fileSize := GetSegmentFileSize(logFileName)
+	fileSize := GetSegmentFileSize(fileName)
 
 	byteOffset := fileSize - int64(byteCount)
-	dataLocation := utils.GetDataLocationFromByteOffset(logFileName, byteOffset)
-
-	if fileSize >= constants.LogFileMaxSizeBytes {
-		createNextDataSegment()
-	}
+	dataLocation := utils.GetDataLocationFromByteOffset(fileName, byteOffset)
 
 	return dataLocation
 }
@@ -75,7 +81,7 @@ func DeleteSegment(fileName string) {
 }
 
 func GetLogFile(fileName string, flag int) (*os.File, func(file *os.File)) {
-	f, err := os.OpenFile(utils.GetDataDirectory()+fileName, flag, 0600)
+	f, err := os.OpenFile(fileName, flag, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -127,10 +133,10 @@ func SetLatestSegmentFileName(fileName string) {
 	LatestSegmentName = fileName
 }
 
-func CreateNewDataSegment() string {
+func CreateNewDataSegmentInDirectory(dataDirectory string) string {
 	fileName := fmt.Sprintf(constants.LogFileNameFormat, strconv.FormatInt(time.Now().UnixNano(), 10))
 
-	file, err := os.Create(utils.GetDataDirectory() + fileName)
+	file, err := os.Create(dataDirectory + fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -148,6 +154,10 @@ func CreateNewDataSegment() string {
 	}
 
 	return fileName
+}
+
+func CreateNewDataSegment() string {
+	return CreateNewDataSegmentInDirectory(utils.GetDataDirectory())
 }
 
 func createNextDataSegment() {
@@ -171,7 +181,7 @@ func GetDataSegmentFileNameList() []string {
 }
 
 func GetCreatedAtFromSegmentFileName(fileName string) time.Time {
-	f, deferFunc := GetLogFile(fileName, os.O_RDONLY)
+	f, deferFunc := GetLogFile(utils.GetDataDirectory()+fileName, os.O_RDONLY)
 
 	defer deferFunc(f)
 
@@ -179,7 +189,7 @@ func GetCreatedAtFromSegmentFileName(fileName string) time.Time {
 }
 
 func ParseDataSegment(fileName string, exec func(k string, v string, byteOffset int64)) {
-	f, deferFunc := GetLogFile(fileName, os.O_RDONLY)
+	f, deferFunc := GetLogFile(utils.GetDataDirectory()+fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	dataSegment.ParseDataSegment(f, exec)

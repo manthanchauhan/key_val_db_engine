@@ -45,7 +45,7 @@ func merge() {
 func mergeSegments(fileNames []string) string {
 	newFileName := disk.CreateNewDataSegment()
 
-	f, deferFunc := disk.GetLogFile(newFileName, os.O_WRONLY|os.O_APPEND)
+	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+newFileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
 	execFunc := func(k string, v string, byteOffset int64) {
@@ -67,7 +67,7 @@ func deleteSegments(fileNames []string) {
 
 func hashMapImportSegmentInitValCheckForMerging(mergedFileNames []string) func(k string) bool {
 	return func(k string) bool {
-		val, ok := hashIndex.Get(k)
+		val, ok := hashIndex.GetDataLocation(k)
 
 		if !ok {
 			return false

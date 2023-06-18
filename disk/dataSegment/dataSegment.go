@@ -89,7 +89,7 @@ func ParseDataSegment(f *os.File, exec func(k string, v string, byteOffset int64
 }
 
 func Write(key string, val string, f *os.File) int {
-	byteString := []byte(key + constants.LogKeyValDelim + val + constants.LogNewLineDelim)
+	byteString := []byte(CombineKeyValueForStorage(key, val))
 
 	byteCount, err := f.Write(byteString)
 	if err != nil {
@@ -97,4 +97,25 @@ func Write(key string, val string, f *os.File) int {
 	}
 
 	return byteCount
+}
+
+func WriteMany(kvPairs [][]string, f *os.File) int {
+	var sb strings.Builder
+
+	for _, kvPair := range kvPairs {
+		sb.WriteString(CombineKeyValueForStorage(kvPair[0], kvPair[1]))
+	}
+
+	byteString := []byte(sb.String())
+
+	byteCount, err := f.Write(byteString)
+	if err != nil {
+		panic(err)
+	}
+
+	return byteCount
+}
+
+func CombineKeyValueForStorage(k string, v string) string {
+	return k + constants.LogKeyValDelim + v + constants.LogNewLineDelim
 }

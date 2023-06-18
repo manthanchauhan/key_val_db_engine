@@ -10,3 +10,6 @@ const NotFoundMsg = "NOT FOUND"
 
 const ClientTypeShell = "SHELL"
 const ClientTypeTcp = "TCP"
+
+const IndexTypeHashIndex = "HASH_INDEX"
+const IndexTypeLSMIndex = "LSM_INDEX"
