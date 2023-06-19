@@ -13,3 +13,5 @@ const ClientTypeTcp = "TCP"
 
 const IndexTypeHashIndex = "HASH_INDEX"
 const IndexTypeLSMIndex = "LSM_INDEX"
+
+const SSTableBlockMaxKeys = 10

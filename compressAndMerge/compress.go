@@ -42,7 +42,7 @@ func createCompressedSegment(originalSegmentFileName string) string {
 	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+newFileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
-	disk.ParseDataSegment(originalSegmentFileName, func(k string, v string, byteOffset int64) {
+	disk.ParseDataSegment(originalSegmentFileName, utils.GetDataDirectory(), func(k string, v string, byteOffset int64) {
 		dataLocation := utils.GetDataLocationFromByteOffset(originalSegmentFileName, byteOffset)
 
 		isUsed := dataLocation == hashIndex.GetDataLocationOrPanic(k)

@@ -4,6 +4,7 @@ import (
 	"bitcask/config/constants"
 	"bitcask/logger"
 	"bitcask/lsmIndex/memTable"
+	"bitcask/lsmIndex/ssTable"
 	"bitcask/lsmIndex/ssTableWriter"
 	"bitcask/utils"
 	"fmt"
@@ -11,14 +12,18 @@ import (
 )
 
 type LsmIndex struct {
-	primaryMemTable    *memTable.MemTable
-	secondaryMemTables []*memTable.MemTable
+	primaryMemTable       *memTable.MemTable
+	secondaryMemTableList []*memTable.MemTable
+	ssTableList           []*ssTable.SSTable
 
 	writeMutex                      *sync.RWMutex
 	secondaryMemTableListWriteMutex *sync.RWMutex
+	ssTableListWriteMutex           *sync.RWMutex
 
-	ssTableWriter            *ssTableWriter.SSTableWriter
-	ssTableWriterSuccessChan chan *memTable.MemTable
+	ssTableWriter      *ssTableWriter.SSTableWriter
+	removeMemTableChan chan *memTable.MemTable
+
+	insertSSTableChan chan *ssTable.SSTable
 
 	dataDirectory string
 
@@ -26,16 +31,53 @@ type LsmIndex struct {
 }
 
 func (lsmIndex *LsmIndex) GetOrPanic(key string) string {
+	if val, isFound := lsmIndex.Get(key); isFound {
+		return val
+	} else {
+		panic(constants.NotFoundMsg)
+	}
+}
 
+func (lsmIndex *LsmIndex) Get(key string) (string, bool) {
+	if val, isFound := lsmIndex.getFromMemTables(key); isFound {
+		return val, isFound
+	}
+
+	if val, isFound := lsmIndex.getFromSSTables(key); isFound {
+		return val, isFound
+	}
+
+	return "", false
+}
+
+func (lsmIndex *LsmIndex) getFromMemTables(key string) (string, bool) {
 	memTables := lsmIndex.getAllMemTables()
 
 	for _, memTable_ := range memTables {
 		if val, isFound := memTable_.Get(key); isFound {
-			return val
+			return val, true
 		}
 	}
 
-	panic(constants.NotFoundMsg)
+	return "", false
+}
+
+func (lsmIndex *LsmIndex) getFromSSTables(key string) (string, bool) {
+	lsmIndex.ssTableListWriteMutex.Lock()
+
+	size := len(lsmIndex.ssTableList)
+	var i int
+
+	for i = size - 1; i >= 0; i-- {
+		ssTable_ := lsmIndex.ssTableList[i]
+
+		if val, isFound := ssTable_.Get(key); isFound {
+			return val, true
+		}
+	}
+
+	lsmIndex.ssTableListWriteMutex.Unlock()
+	return "", false
 }
 
 func (lsmIndex *LsmIndex) GetDataLocation(key string) (string, bool) {
@@ -89,7 +131,7 @@ func (lsmIndex *LsmIndex) setWithoutThreadSafe(key string, val string) error {
 func (lsmIndex *LsmIndex) addMemTableToSecondaryList(memTable *memTable.MemTable) {
 	lsmIndex.secondaryMemTableListWriteMutex.Lock()
 
-	lsmIndex.secondaryMemTables = append(lsmIndex.secondaryMemTables, memTable)
+	lsmIndex.secondaryMemTableList = append(lsmIndex.secondaryMemTableList, memTable)
 
 	lsmIndex.secondaryMemTableListWriteMutex.Unlock()
 }
@@ -99,13 +141,13 @@ func (lsmIndex *LsmIndex) removeMemTableFromSecondaryList(memTableToRemove *memT
 
 	var secondaryMemTables []*memTable.MemTable
 
-	for _, memTable_ := range lsmIndex.secondaryMemTables {
+	for _, memTable_ := range lsmIndex.secondaryMemTableList {
 		if memTable_ != memTableToRemove {
 			secondaryMemTables = append(secondaryMemTables, memTable_)
 		}
 	}
 
-	lsmIndex.secondaryMemTables = secondaryMemTables
+	lsmIndex.secondaryMemTableList = secondaryMemTables
 
 	lsmIndex.secondaryMemTableListWriteMutex.Unlock()
 }
@@ -129,16 +171,20 @@ func (lsmIndex *LsmIndex) Init() {
 
 	lsmIndex.writeMutex = &sync.RWMutex{}
 	lsmIndex.secondaryMemTableListWriteMutex = &sync.RWMutex{}
+	lsmIndex.ssTableListWriteMutex = &sync.RWMutex{}
 
-	lsmIndex.ssTableWriterSuccessChan = make(chan *memTable.MemTable)
+	lsmIndex.removeMemTableChan = make(chan *memTable.MemTable)
+	lsmIndex.insertSSTableChan = make(chan *ssTable.SSTable)
 
 	lsmIndex.ssTableWriter = &ssTableWriter.SSTableWriter{
-		SuccessChan:   &lsmIndex.ssTableWriterSuccessChan,
-		DataDirectory: lsmIndex.dataDirectory,
+		SuccessChan:    &lsmIndex.removeMemTableChan,
+		DataDirectory:  lsmIndex.dataDirectory,
+		NewSSTableChan: &lsmIndex.insertSSTableChan,
 	}
 	lsmIndex.ssTableWriter.Init()
 
 	lsmIndex.consumeSuccessChan()
+	lsmIndex.consumeInsertSSTableChan()
 
 	lsmIndex.isInitialized = true
 }
@@ -150,21 +196,22 @@ func (lsmIndex *LsmIndex) GetDataDirectory() string {
 func (lsmIndex *LsmIndex) getAllMemTables() []*memTable.MemTable {
 	var memTables []*memTable.MemTable
 
-	if lsmIndex.secondaryMemTables == nil {
+	if lsmIndex.secondaryMemTableList == nil {
 		memTables = []*memTable.MemTable{lsmIndex.primaryMemTable}
 	} else {
-		memTables = append(lsmIndex.secondaryMemTables, lsmIndex.primaryMemTable)
+		memTables = append(lsmIndex.secondaryMemTableList, lsmIndex.primaryMemTable)
 	}
 
 	return memTables
 }
 
 func (lsmIndex *LsmIndex) consumeSuccessChan() {
-	logger.SugaredLogger.Infof("Starting Memtable cleanup go routine for channel %v", lsmIndex.ssTableWriterSuccessChan)
+	logger.SugaredLogger.Infof("Starting Memtable cleanup go routine for channel %v", lsmIndex.removeMemTableChan)
+
 	go func() {
 		for {
 			select {
-			case memTable_ := <-lsmIndex.ssTableWriterSuccessChan:
+			case memTable_ := <-lsmIndex.removeMemTableChan:
 				logger.SugaredLogger.Infof("Removing memtable %v", memTable_)
 				lsmIndex.removeMemTableFromSecondaryList(memTable_)
 				logger.SugaredLogger.Infof("Removed memtable %v", memTable_)
@@ -173,11 +220,34 @@ func (lsmIndex *LsmIndex) consumeSuccessChan() {
 	}()
 }
 
+func (lsmIndex *LsmIndex) consumeInsertSSTableChan() {
+	logger.SugaredLogger.Infof("Starting SSTable insertion go routine for channel %v", lsmIndex.insertSSTableChan)
+
+	go func() {
+		for {
+			select {
+			case ssTable_ := <-lsmIndex.insertSSTableChan:
+				logger.SugaredLogger.Infof("Inserting SSTable %v", ssTable_)
+				lsmIndex.insertNewSSTable(ssTable_)
+				logger.SugaredLogger.Infof("Inserted SSTable %v", ssTable_)
+			}
+		}
+	}()
+}
+
+func (lsmIndex *LsmIndex) insertNewSSTable(ssTable *ssTable.SSTable) {
+	lsmIndex.ssTableListWriteMutex.Lock()
+
+	lsmIndex.ssTableList = append(lsmIndex.ssTableList, ssTable)
+
+	lsmIndex.ssTableListWriteMutex.Unlock()
+}
+
 func NewLsmIndex() (*LsmIndex, error) {
 	lsmIndex := LsmIndex{
-		primaryMemTable:    nil,
-		secondaryMemTables: nil,
-		dataDirectory:      utils.GetDataDirectory(),
+		primaryMemTable:       nil,
+		secondaryMemTableList: nil,
+		dataDirectory:         utils.GetDataDirectory(),
 	}
 
 	lsmIndex.Init()

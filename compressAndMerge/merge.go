@@ -53,7 +53,7 @@ func mergeSegments(fileNames []string) string {
 	}
 
 	for _, fileName := range fileNames {
-		disk.ParseDataSegment(fileName, execFunc)
+		disk.ParseDataSegment(fileName, utils.GetDataDirectory(), execFunc)
 	}
 
 	return newFileName

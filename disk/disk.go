@@ -16,6 +16,14 @@ import (
 var LatestSegmentName = ""
 
 func Read(dataLocation string, dataDirectory string) string {
+	scanner := GetDataLogScanner(dataLocation, dataDirectory)
+
+	scanner.Scan()
+	s := scanner.Text()
+	return s
+}
+
+func GetDataLogScanner(dataLocation string, dataDirectory string) *bufio.Scanner {
 	fileName, byteOffset := ExtractFileNameAndOffset(dataLocation)
 
 	f, deferFunc := GetLogFile(dataDirectory+fileName, os.O_RDONLY)
@@ -29,9 +37,7 @@ func Read(dataLocation string, dataDirectory string) string {
 	scanner := bufio.NewScanner(f)
 	scanner.Split(dataSegment.SplitAt(constants.LogNewLineDelim))
 
-	scanner.Scan()
-	s := scanner.Text()
-	return s
+	return scanner
 }
 
 func Write(key string, val string) string {
@@ -188,8 +194,8 @@ func GetCreatedAtFromSegmentFileName(fileName string) time.Time {
 	return dataSegment.GetCreatedAtFromSegmentFile(f)
 }
 
-func ParseDataSegment(fileName string, exec func(k string, v string, byteOffset int64)) {
-	f, deferFunc := GetLogFile(utils.GetDataDirectory()+fileName, os.O_RDONLY)
+func ParseDataSegment(fileName string, directory string, exec func(k string, v string, byteOffset int64)) {
+	f, deferFunc := GetLogFile(directory+fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	dataSegment.ParseDataSegment(f, exec)

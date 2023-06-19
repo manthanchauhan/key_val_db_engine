@@ -1,17 +1,16 @@
 package ssTableWriter
 
 import (
-	"bitcask/disk"
-	"bitcask/disk/dataSegment"
 	"bitcask/logger"
 	"bitcask/lsmIndex/memTable"
+	"bitcask/lsmIndex/ssTable"
 	"fmt"
-	"os"
 )
 
 type SSTableWriter struct {
-	SuccessChan *chan *memTable.MemTable
-	jobChan     chan *memTable.MemTable
+	SuccessChan    *chan *memTable.MemTable
+	jobChan        chan *memTable.MemTable
+	NewSSTableChan *chan *ssTable.SSTable
 
 	DataDirectory string
 
@@ -40,8 +39,10 @@ func (s *SSTableWriter) Init() {
 			case memTable_ := <-s.jobChan:
 				logger.SugaredLogger.Infof("Writing MemTable %v to SSTable", memTable_)
 
-				s.writeMemTableToSSTable(memTable_)
+				ssTable_ := s.writeMemTableToSSTable(memTable_)
+
 				*s.SuccessChan <- memTable_
+				*s.NewSSTableChan <- ssTable_
 
 				logger.SugaredLogger.Infof("MemTable %v queued for destruction", memTable_)
 			}
@@ -55,21 +56,16 @@ func (s *SSTableWriter) Init() {
 	s.isInitialized = true
 }
 
-func (s *SSTableWriter) writeMemTableToSSTable(memTable *memTable.MemTable) {
+func (s *SSTableWriter) writeMemTableToSSTable(memTable *memTable.MemTable) *ssTable.SSTable {
 	memTable.IsBeingWrittenToDisk = true
 
-	ssTableFileName := disk.CreateNewDataSegmentInDirectory(s.DataDirectory)
+	ssTable_, err := ssTable.NewSSTable(memTable, s.DataDirectory)
 
-	logger.SugaredLogger.Infof("Created new SSTable %s", ssTableFileName)
-
-	kvPairs := memTable.GetKeyValPairs()
-
-	f, deferFunc := disk.GetLogFile(s.DataDirectory+ssTableFileName, os.O_WRONLY|os.O_APPEND)
-	defer deferFunc(f)
-
-	dataSegment.WriteMany(kvPairs, f)
-
-	logger.SugaredLogger.Infof("Memtable %v written to SSTable %s", memTable, ssTableFileName)
+	if err != nil {
+		panic(err)
+	}
 
 	memTable.IsBeingWrittenToDisk = false
+
+	return ssTable_
 }
