@@ -2,6 +2,7 @@ package memTable
 
 import (
 	"bitcask/config/constants"
+	"bitcask/utils"
 	"fmt"
 	"github.com/emirpasic/gods/trees/redblacktree"
 	"sync"
@@ -14,7 +15,7 @@ type MemTable struct {
 	maxSize      int
 	size         int
 
-	putMutex sync.RWMutex
+	putMutex *sync.RWMutex
 
 	IsBeingWrittenToDisk bool
 }
@@ -25,7 +26,7 @@ func (memTable *MemTable) Init() error {
 }
 
 func (memTable *MemTable) Put(key string, val string) error {
-	memTable.putMutex.Lock()
+	defer utils.LockThenDefer(memTable.putMutex)()
 
 	if memTable.IsBeingWrittenToDisk {
 		panic(fmt.Sprintf("MemTable %v is being written to disk", memTable))
@@ -33,7 +34,6 @@ func (memTable *MemTable) Put(key string, val string) error {
 
 	memTable.redBlackTree.Put(key, val)
 	memTable.size += len(key) + len(val)
-	memTable.putMutex.Unlock()
 	return nil
 }
 
@@ -74,7 +74,7 @@ func NewMemTable() (*MemTable, error) {
 		redBlackTree:         nil,
 		maxSize:              constants.MemTableMaxSizeBytes,
 		size:                 0,
-		putMutex:             sync.RWMutex{},
+		putMutex:             &sync.RWMutex{},
 		IsBeingWrittenToDisk: false,
 		Id:                   time.Now().UnixNano(),
 	}

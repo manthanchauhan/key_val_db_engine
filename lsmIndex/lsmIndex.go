@@ -126,15 +126,13 @@ func (lsmIndex *LsmIndex) setWithoutThreadSafe(key string, val string) error {
 }
 
 func (lsmIndex *LsmIndex) addMemTableToSecondaryList(memTable *memTable.MemTable) {
-	lsmIndex.secondaryMemTableListWriteMutex.Lock()
+	defer utils.LockThenDefer(lsmIndex.secondaryMemTableListWriteMutex)()
 
 	lsmIndex.secondaryMemTableList = append(lsmIndex.secondaryMemTableList, memTable)
-
-	lsmIndex.secondaryMemTableListWriteMutex.Unlock()
 }
 
 func (lsmIndex *LsmIndex) removeMemTableFromSecondaryList(memTableToRemove *memTable.MemTable) {
-	lsmIndex.secondaryMemTableListWriteMutex.Lock()
+	defer utils.LockThenDefer(lsmIndex.secondaryMemTableListWriteMutex)()
 
 	var secondaryMemTables []*memTable.MemTable
 
@@ -145,8 +143,6 @@ func (lsmIndex *LsmIndex) removeMemTableFromSecondaryList(memTableToRemove *memT
 	}
 
 	lsmIndex.secondaryMemTableList = secondaryMemTables
-
-	lsmIndex.secondaryMemTableListWriteMutex.Unlock()
 }
 
 func (lsmIndex *LsmIndex) ImportDataSegment(fileName string, initValCheck func(k string) bool) {
@@ -233,11 +229,9 @@ func (lsmIndex *LsmIndex) consumeInsertSSTableChan() {
 }
 
 func (lsmIndex *LsmIndex) insertNewSSTable(ssTable *ssTable.SSTable) {
-	lsmIndex.ssTableListWriteMutex.Lock()
+	defer utils.LockThenDefer(lsmIndex.ssTableListWriteMutex)()
 
 	lsmIndex.ssTableList = append(lsmIndex.ssTableList, ssTable)
-
-	lsmIndex.ssTableListWriteMutex.Unlock()
 }
 
 func NewLsmIndex() (*LsmIndex, error) {
