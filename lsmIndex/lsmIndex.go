@@ -152,11 +152,57 @@ func (lsmIndex *LsmIndex) ImportData() {
 	for _, fileName := range dataSegmentFileNames {
 		lsmIndex.ImportDataSegment(fileName)
 	}
+
+	walFileNames := disk.GetDataSegmentFileNameList(constants.MemTableWALDirectory)
+
+	var filteredWALNames []string
+
+	for _, fileName := range walFileNames {
+		if lsmIndex.primaryMemTable.WalFileName == fileName {
+			continue
+		}
+
+		isTaken := false
+
+		for _, memTable_ := range lsmIndex.secondaryMemTableList {
+			if memTable_.WalFileName == fileName {
+				isTaken = true
+				break
+			}
+		}
+
+		if isTaken {
+			continue
+		}
+
+		filteredWALNames = append(filteredWALNames, fileName)
+	}
+
+	for _, fileName := range filteredWALNames {
+		lsmIndex.ImportWAL(fileName)
+	}
+
+	lsmIndex.flushSecondaryMemTableList()
+}
+
+func (lsmIndex *LsmIndex) flushSecondaryMemTableList() {
+	for _, memTable_ := range lsmIndex.secondaryMemTableList {
+		lsmIndex.ssTableWriter.WriteMemTableToSSTable(memTable_)
+	}
 }
 
 func (lsmIndex *LsmIndex) ImportDataSegment(fileName string) {
 	ssTable_ := ssTable.NewSSTableFromFileName(fileName, lsmIndex.dataDirectory)
 	lsmIndex.insertNewSSTable(ssTable_)
+}
+
+func (lsmIndex *LsmIndex) ImportWAL(fileName string) {
+	memTable_, err := memTable.FromWAL(fileName, constants.MemTableWALDirectory)
+	if err != nil {
+		panic(err)
+	}
+
+	lsmIndex.addMemTableToSecondaryList(memTable_)
 }
 
 func (lsmIndex *LsmIndex) Init() {

@@ -14,5 +14,8 @@ const ClientTypeTcp = "TCP"
 const IndexTypeHashIndex = "HASH_INDEX"
 const IndexTypeLSMIndex = "LSM_INDEX"
 
+const DataDirectoryLSMIndex = "/Users/manthan/GolandProjects/bitcask/dataLogs/LsmIndexDataLogs/"
+
 const SSTableBlockMaxKeys = 10
 const MemTableMaxSizeBytes = 50
+const MemTableWALDirectory = DataDirectoryLSMIndex + "WALs/"

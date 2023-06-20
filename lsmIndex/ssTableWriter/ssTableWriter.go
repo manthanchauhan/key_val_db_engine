@@ -65,7 +65,7 @@ func (s *SSTableWriter) writeMemTableToSSTable(memTable *memTable.MemTable) *ssT
 		panic(err)
 	}
 
-	memTable.IsBeingWrittenToDisk = false
+	memTable.IsWrittenToSSTable()
 
 	return ssTable_
 }

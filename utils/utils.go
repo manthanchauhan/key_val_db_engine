@@ -20,7 +20,7 @@ func GetDataDirectory() string {
 	if IsExecutionModeProduction() {
 		switch GetIndexType() {
 		case constants.IndexTypeLSMIndex:
-			return "/Users/manthan/GolandProjects/bitcask/dataLogs/LsmIndexDataLogs/"
+			return constants.DataDirectoryLSMIndex
 		default:
 			return "/Users/manthan/GolandProjects/bitcask/dataLogs/"
 		}

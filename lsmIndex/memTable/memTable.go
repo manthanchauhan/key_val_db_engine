@@ -2,9 +2,12 @@ package memTable
 
 import (
 	"bitcask/config/constants"
+	"bitcask/disk"
+	"bitcask/disk/dataSegment"
 	"bitcask/utils"
 	"fmt"
 	"github.com/emirpasic/gods/trees/redblacktree"
+	"os"
 	"sync"
 	"time"
 )
@@ -18,6 +21,8 @@ type MemTable struct {
 	putMutex *sync.RWMutex
 
 	IsBeingWrittenToDisk bool
+	WalFileName          string
+	walDirectory         string
 }
 
 func (memTable *MemTable) Init() error {
@@ -28,12 +33,29 @@ func (memTable *MemTable) Init() error {
 func (memTable *MemTable) Put(key string, val string) error {
 	defer utils.LockThenDefer(memTable.putMutex)()
 
+	if err := memTable.writeWAL(key, val); err != nil {
+		panic(err)
+	}
+
+	return memTable.put(key, val)
+}
+
+func (memTable *MemTable) put(key string, val string) error {
 	if memTable.IsBeingWrittenToDisk {
 		panic(fmt.Sprintf("MemTable %v is being written to disk", memTable))
 	}
 
 	memTable.redBlackTree.Put(key, val)
 	memTable.size += len(key) + len(val)
+	return nil
+}
+
+func (memTable *MemTable) writeWAL(key string, val string) error {
+	f, deferFunc := disk.GetLogFile(memTable.walDirectory+memTable.WalFileName, os.O_APPEND|os.O_WRONLY)
+	defer deferFunc(f)
+
+	dataSegment.Write(key, val, f)
+
 	return nil
 }
 
@@ -69,6 +91,18 @@ func (memTable *MemTable) String() string {
 	return fmt.Sprintf("{Id:%d}", memTable.Id)
 }
 
+func (memTable *MemTable) deleteWAL() error {
+	return os.Remove(memTable.walDirectory + memTable.WalFileName)
+}
+
+func (memTable *MemTable) IsWrittenToSSTable() {
+	if err := memTable.deleteWAL(); err != nil {
+		panic(err)
+	}
+
+	memTable.IsBeingWrittenToDisk = false
+}
+
 func NewMemTable() (*MemTable, error) {
 	memTable := MemTable{
 		redBlackTree:         nil,
@@ -77,11 +111,38 @@ func NewMemTable() (*MemTable, error) {
 		putMutex:             &sync.RWMutex{},
 		IsBeingWrittenToDisk: false,
 		Id:                   time.Now().UnixNano(),
+		WalFileName:          disk.CreateNewDataSegmentInDirectory(constants.MemTableWALDirectory),
+		walDirectory:         constants.MemTableWALDirectory,
 	}
 
 	if err := memTable.Init(); err != nil {
 		return nil, err
 	}
+
+	return &memTable, nil
+}
+
+func FromWAL(fileName string, directory string) (*MemTable, error) {
+	memTable := MemTable{
+		redBlackTree:         nil,
+		maxSize:              constants.MemTableMaxSizeBytes,
+		size:                 0,
+		putMutex:             &sync.RWMutex{},
+		IsBeingWrittenToDisk: false,
+		Id:                   time.Now().UnixNano(),
+		WalFileName:          fileName,
+		walDirectory:         directory,
+	}
+
+	if err := memTable.Init(); err != nil {
+		return nil, err
+	}
+
+	disk.ParseDataSegment(fileName, directory, func(k string, v string, byteOffset int64) {
+		if err := memTable.put(k, v); err != nil {
+			panic(err)
+		}
+	})
 
 	return &memTable, nil
 }
