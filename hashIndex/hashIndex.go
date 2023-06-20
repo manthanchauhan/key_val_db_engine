@@ -43,7 +43,7 @@ func Build() {
 
 	disk.FindLatestSegmentFileName()
 
-	dataSegmentFileNames := disk.GetDataSegmentFileNameList()
+	dataSegmentFileNames := disk.GetDataSegmentFileNameList(utils.GetDataDirectory())
 
 	for _, fileName := range dataSegmentFileNames {
 		ImportDataSegment(fileName, nil)

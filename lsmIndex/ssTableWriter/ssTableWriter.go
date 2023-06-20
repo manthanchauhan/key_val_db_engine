@@ -59,7 +59,7 @@ func (s *SSTableWriter) Init() {
 func (s *SSTableWriter) writeMemTableToSSTable(memTable *memTable.MemTable) *ssTable.SSTable {
 	memTable.IsBeingWrittenToDisk = true
 
-	ssTable_, err := ssTable.NewSSTable(memTable, s.DataDirectory)
+	ssTable_, err := ssTable.NewSSTableFromMemTable(memTable, s.DataDirectory)
 
 	if err != nil {
 		panic(err)

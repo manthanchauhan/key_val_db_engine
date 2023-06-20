@@ -97,7 +97,7 @@ func ExtractFileNameAndOffset(dataLocation string) (string, int64) {
 }
 
 func FindLatestSegmentFileName() {
-	dataSegmentFileNames := GetDataSegmentFileNameList()
+	dataSegmentFileNames := GetDataSegmentFileNameList(utils.GetDataDirectory())
 	createdAtMax := time.Time{}
 	latestSegmentFileName := ""
 
@@ -153,8 +153,8 @@ func createNextDataSegment() {
 	SetLatestSegmentFileName(latestSegmentFileName)
 }
 
-func GetDataSegmentFileNameList() []string {
-	entries, err := os.ReadDir(utils.GetDataDirectory())
+func GetDataSegmentFileNameList(dataDirectory string) []string {
+	entries, err := os.ReadDir(dataDirectory)
 	if err != nil {
 		panic(err)
 	}

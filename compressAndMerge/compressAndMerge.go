@@ -2,6 +2,7 @@ package compressAndMerge
 
 import (
 	"bitcask/disk"
+	"bitcask/utils"
 	"io/fs"
 	"syscall"
 	"time"
@@ -34,7 +35,7 @@ func compressAndMerge() {
 }
 
 func getReadOnlySegmentFileNames() []string {
-	segmentFileNames := disk.GetDataSegmentFileNameList()
+	segmentFileNames := disk.GetDataSegmentFileNameList(utils.GetDataDirectory())
 	readOnlySegmentFileNames := make([]string, len(segmentFileNames))
 	i := 0
 

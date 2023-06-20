@@ -2,6 +2,7 @@ package lsmIndex
 
 import (
 	"bitcask/config/constants"
+	"bitcask/disk"
 	"bitcask/logger"
 	"bitcask/lsmIndex/memTable"
 	"bitcask/lsmIndex/ssTable"
@@ -145,9 +146,17 @@ func (lsmIndex *LsmIndex) removeMemTableFromSecondaryList(memTableToRemove *memT
 	lsmIndex.secondaryMemTableList = secondaryMemTables
 }
 
-func (lsmIndex *LsmIndex) ImportDataSegment(fileName string, initValCheck func(k string) bool) {
-	//TODO implement me
-	panic("implement me")
+func (lsmIndex *LsmIndex) ImportData() {
+	dataSegmentFileNames := disk.GetDataSegmentFileNameList(lsmIndex.dataDirectory)
+
+	for _, fileName := range dataSegmentFileNames {
+		lsmIndex.ImportDataSegment(fileName)
+	}
+}
+
+func (lsmIndex *LsmIndex) ImportDataSegment(fileName string) {
+	ssTable_ := ssTable.NewSSTableFromFileName(fileName, lsmIndex.dataDirectory)
+	lsmIndex.insertNewSSTable(ssTable_)
 }
 
 func (lsmIndex *LsmIndex) Init() {
@@ -179,6 +188,7 @@ func (lsmIndex *LsmIndex) Init() {
 	lsmIndex.consumeSuccessChan()
 	lsmIndex.consumeInsertSSTableChan()
 
+	lsmIndex.ImportData()
 	lsmIndex.isInitialized = true
 }
 

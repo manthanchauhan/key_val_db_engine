@@ -92,7 +92,7 @@ func (s *SSTable) buildIndex() {
 	})
 }
 
-func NewSSTable(memTable *memTable.MemTable, directory string) (*SSTable, error) {
+func NewSSTableFromMemTable(memTable *memTable.MemTable, directory string) (*SSTable, error) {
 	ssTable := SSTable{
 		directory: directory,
 	}
@@ -113,4 +113,15 @@ func NewSSTable(memTable *memTable.MemTable, directory string) (*SSTable, error)
 	logger.SugaredLogger.Infof("Memtable %v written to SSTable %s", memTable, ssTable.fileName)
 
 	return &ssTable, nil
+}
+
+func NewSSTableFromFileName(fileName string, directory string) *SSTable {
+	ssTable := SSTable{
+		directory: directory,
+	}
+
+	ssTable.fileName = fileName
+	ssTable.buildIndex()
+
+	return &ssTable
 }

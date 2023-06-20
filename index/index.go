@@ -5,6 +5,6 @@ type Index interface {
 	Get(key string) (string, bool)
 	Set(key string, val string) error
 	Init()
-	ImportDataSegment(fileName string, initValCheck func(k string) bool)
+	ImportData()
 	GetDataDirectory() string
 }
