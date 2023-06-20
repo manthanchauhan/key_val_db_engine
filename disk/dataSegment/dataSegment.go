@@ -30,8 +30,16 @@ func GetCreatedAtFromSegmentFile(f *os.File) time.Time {
 	return segmentMetaData.CreatedAt
 }
 
-func GetDataLogScanner(f *os.File) *bufio.Scanner {
-	if _, err := f.Seek(constants.DataSegmentMetaDataByteSize, 0); err != nil {
+func GetDataLogScanner(f *os.File, offset *int64) *bufio.Scanner {
+	var offset_ int64
+
+	if offset == nil {
+		offset_ = constants.DataSegmentMetaDataByteSize
+	} else {
+		offset_ = *offset
+	}
+
+	if _, err := f.Seek(offset_, 0); err != nil {
 		panic(err)
 	}
 
@@ -74,7 +82,7 @@ func ExtractKeyVal(dataLine string) (string, string) {
 }
 
 func ParseDataSegment(f *os.File, exec func(k string, v string, byteOffset int64)) {
-	scanner := GetDataLogScanner(f)
+	scanner := GetDataLogScanner(f, nil)
 
 	var byteOffset int64 = constants.DataSegmentMetaDataByteSize
 

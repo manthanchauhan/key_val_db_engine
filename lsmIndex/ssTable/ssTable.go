@@ -6,10 +6,8 @@ import (
 	"bitcask/disk/dataSegment"
 	"bitcask/logger"
 	"bitcask/lsmIndex/memTable"
-	"fmt"
 	orderedMap "github.com/wk8/go-ordered-map"
 	"os"
-	"strconv"
 )
 
 type SSTable struct {
@@ -56,17 +54,25 @@ func (s *SSTable) getBlockOffset(key string) (*int64, error) {
 }
 
 func (s *SSTable) getValueFromBlock(key string, blockOffset int64) (*string, error) {
-	dataLocation := fmt.Sprintf("%s:%s", s.fileName, strconv.FormatInt(blockOffset, 10))
+	f, deferFunc := disk.GetLogFile(s.directory+s.fileName, os.O_RDONLY)
+	defer deferFunc(f)
 
-	scanner := disk.GetDataLogScanner(dataLocation, s.directory)
+	scanner := dataSegment.GetDataLogScanner(f, &blockOffset)
 
-	for i := 0; i < 10; i++ {
-		data := scanner.Text()
-		if k, v := dataSegment.ExtractKeyVal(data); k == key {
+	i := 0
+
+	for scanner.Scan() {
+		if i >= 10 {
+			break
+		}
+
+		dataLine := scanner.Text()
+
+		if k, v := dataSegment.ExtractKeyVal(dataLine); k == key {
 			return &v, nil
 		}
 
-		scanner.Scan()
+		i++
 	}
 
 	return nil, nil

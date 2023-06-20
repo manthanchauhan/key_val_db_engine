@@ -4,7 +4,6 @@ import (
 	"bitcask/config/constants"
 	"bitcask/disk/dataSegment"
 	"bitcask/utils"
-	"bufio"
 	"fmt"
 	"os"
 	"strconv"
@@ -15,30 +14,13 @@ import (
 
 var LatestSegmentName = ""
 
-func Read(dataLocation string, dataDirectory string) string {
-	scanner := GetDataLogScanner(dataLocation, dataDirectory)
+//func Read(dataLocation string, dataDirectory string) string {
+//scanner := GetDataLogScanner(dataLocation, dataDirectory)
 
-	scanner.Scan()
-	s := scanner.Text()
-	return s
-}
-
-func GetDataLogScanner(dataLocation string, dataDirectory string) *bufio.Scanner {
-	fileName, byteOffset := ExtractFileNameAndOffset(dataLocation)
-
-	f, deferFunc := GetLogFile(dataDirectory+fileName, os.O_RDONLY)
-	defer deferFunc(f)
-
-	_, err := f.Seek(byteOffset, 0)
-	if err != nil {
-		panic(err)
-	}
-
-	scanner := bufio.NewScanner(f)
-	scanner.Split(dataSegment.SplitAt(constants.LogNewLineDelim))
-
-	return scanner
-}
+//scanner.Scan()
+//s := scanner.Text()
+//return s
+//}
 
 func Write(key string, val string) string {
 	logFileName := LatestSegmentName

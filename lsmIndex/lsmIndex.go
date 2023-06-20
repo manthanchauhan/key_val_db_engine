@@ -63,7 +63,7 @@ func (lsmIndex *LsmIndex) getFromMemTables(key string) (string, bool) {
 }
 
 func (lsmIndex *LsmIndex) getFromSSTables(key string) (string, bool) {
-	lsmIndex.ssTableListWriteMutex.Lock()
+	defer utils.LockThenDefer(lsmIndex.ssTableListWriteMutex)()
 
 	size := len(lsmIndex.ssTableList)
 	var i int
@@ -76,7 +76,6 @@ func (lsmIndex *LsmIndex) getFromSSTables(key string) (string, bool) {
 		}
 	}
 
-	lsmIndex.ssTableListWriteMutex.Unlock()
 	return "", false
 }
 
@@ -86,11 +85,9 @@ func (lsmIndex *LsmIndex) GetDataLocation(key string) (string, bool) {
 }
 
 func (lsmIndex *LsmIndex) Set(key string, val string) error {
-	lsmIndex.writeMutex.Lock()
+	defer utils.LockThenDefer(lsmIndex.writeMutex)()
 
 	err := lsmIndex.setWithoutThreadSafe(key, val)
-
-	lsmIndex.writeMutex.Unlock()
 
 	return err
 }

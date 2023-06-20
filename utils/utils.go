@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 )
 
 func GetDataLocationFromByteOffset(segmentFileName string, byteOffset int64) string {
@@ -52,4 +53,12 @@ func GetClientType() string {
 
 func GetIndexType() string {
 	return os.Getenv(constants.IndexType)
+}
+
+func LockThenDefer(mutex *sync.RWMutex) func() {
+	mutex.Lock()
+
+	return func() {
+		mutex.Unlock()
+	}
 }

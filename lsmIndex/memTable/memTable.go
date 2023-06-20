@@ -1,13 +1,12 @@
 package memTable
 
 import (
+	"bitcask/config/constants"
 	"fmt"
 	"github.com/emirpasic/gods/trees/redblacktree"
 	"sync"
 	"time"
 )
-
-const MaxSizeBytes = 10
 
 type MemTable struct {
 	Id           int64
@@ -73,7 +72,7 @@ func (memTable *MemTable) String() string {
 func NewMemTable() (*MemTable, error) {
 	memTable := MemTable{
 		redBlackTree:         nil,
-		maxSize:              MaxSizeBytes,
+		maxSize:              constants.MemTableMaxSizeBytes,
 		size:                 0,
 		putMutex:             sync.RWMutex{},
 		IsBeingWrittenToDisk: false,
