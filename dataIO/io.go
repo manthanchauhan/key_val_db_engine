@@ -1,6 +1,7 @@
 package dataIO
 
 import (
+	"bitcask/compressAndMerge"
 	"bitcask/config/constants"
 	"bitcask/index"
 	"bitcask/logger"
@@ -39,8 +40,6 @@ func Init() {
 	//
 	//case constants.IndexTypeHashIndex:
 	//	hashIndex.Init()
-	//	go compressAndMerge.CompressionAndMergingGoRoutine() todo
-
 	case constants.IndexTypeLSMIndex:
 		Index, err = lsmIndex.NewLsmIndex()
 
@@ -53,4 +52,6 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+
+	go compressAndMerge.CompressionAndMergingGoRoutine()
 }
