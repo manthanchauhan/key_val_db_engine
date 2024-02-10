@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 func GetDataLocationFromByteOffset(segmentFileName string, byteOffset int64) string {
@@ -38,4 +39,11 @@ func Contains(s []string, e string) bool {
 
 func GetClientType() string {
 	return os.Getenv(constants.ClientType)
+}
+
+func EqualsIgnoreCase(s1 string, s2 string) bool {
+	s1 = strings.ToUpper(strings.TrimSpace(s1))
+	s2 = strings.ToUpper(strings.TrimSpace(s2))
+
+	return s1 == s2
 }

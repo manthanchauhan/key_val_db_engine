@@ -10,3 +10,7 @@ const NotFoundMsg = "NOT FOUND"
 
 const ClientTypeShell = "SHELL"
 const ClientTypeTcp = "TCP"
+
+const DeletedValuePlaceholder = "#!DEL!#"
+
+var Keywords = []string{DeletedValuePlaceholder}

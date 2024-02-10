@@ -54,6 +54,10 @@ func Write(key string, val string) string {
 	return dataLocation
 }
 
+func Delete(key string) {
+	_ = Write(key, constants.DeletedValuePlaceholder)
+}
+
 func GetSegmentFileSize(fileName string) int64 {
 	fileStat, err := os.Stat(utils.GetDataDirectory() + fileName)
 	if err != nil {

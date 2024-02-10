@@ -34,6 +34,12 @@ func Set(key string, val string) {
 	hashMapMutex.Unlock()
 }
 
+func Delete(key string) {
+	hashMapMutex.Lock()
+	delete(hashMap, key)
+	hashMapMutex.Unlock()
+}
+
 func Build() {
 	hashMap = map[string]string{}
 
@@ -49,6 +55,11 @@ func ImportDataSegment(fileName string, initValCheck func(k string) bool) {
 	disk.ParseDataSegment(fileName, func(k string, v string, byteOffset int64) {
 		if initValCheck == nil || initValCheck(k) {
 			dataLocation := utils.GetDataLocationFromByteOffset(fileName, byteOffset)
+
+			if utils.EqualsIgnoreCase(v, constants.DeletedValuePlaceholder) {
+				return
+			}
+
 			Set(k, dataLocation)
 		}
 	})

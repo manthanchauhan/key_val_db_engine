@@ -45,7 +45,7 @@ func createCompressedSegment(originalSegmentFileName string) string {
 	disk.ParseDataSegment(originalSegmentFileName, func(k string, v string, byteOffset int64) {
 		dataLocation := utils.GetDataLocationFromByteOffset(originalSegmentFileName, byteOffset)
 
-		isUsed := dataLocation == hashIndex.GetDataLocation(k)
+		isUsed := !utils.EqualsIgnoreCase(v, constants.DeletedValuePlaceholder) && (dataLocation == hashIndex.GetDataLocation(k))
 
 		if isUsed {
 			dataSegment.Write(k, v, f)
