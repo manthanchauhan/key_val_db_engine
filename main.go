@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bitcask/client/shell"
 	"bitcask/config/constants"
 	"bitcask/dataIO"
 	"bitcask/logger"
-	"bitcask/shell"
 	"bitcask/tcp"
 	"bitcask/test"
 	"bitcask/utils"
@@ -28,12 +28,12 @@ func start() {
 	switch utils.GetClientType() {
 
 	case constants.ClientTypeShell:
-		shell.Start()
+		shell.GetDefaultShellClient().Run()
 
 	case constants.ClientTypeTcp:
 		tcp.StartServer()
 
 	default:
-		shell.Start()
+		shell.GetDefaultShellClient().Run()
 	}
 }

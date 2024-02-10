@@ -10,17 +10,20 @@ import (
 	"strings"
 )
 
-func Start() {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Println("Simple Shell")
+type Client struct {
+	Reader *bufio.Reader
+}
+
+func (c *Client) Run() {
+	fmt.Println("DB Shell")
 	fmt.Println("---------------------")
 
 	var command string
 
 	for true {
 		fmt.Print("-> ")
-		text, _ := reader.ReadString('\n')
-		// convert CRLF to LF
+		text, _ := c.Reader.ReadString('\n')
+
 		command = strings.Replace(text, "\n", "", -1)
 
 		words := strings.Split(command, " ")
@@ -38,14 +41,13 @@ func Start() {
 
 		switch operation {
 		case constants.CommandWrite:
-			writeCommandShell(command)
+			c.writeHandler(command)
 			break
 		case constants.CommandRead:
-			val := readCommandShell(command)
-			fmt.Println(val)
+			c.readHandler(command)
 			break
 		case constants.CommandDelete:
-			deleteCommandShell(command)
+			c.deleteHandler(command)
 			break
 		default:
 			fmt.Println("Invalid input")
@@ -53,22 +55,23 @@ func Start() {
 	}
 }
 
-func readCommandShell(command string) string {
+func (c *Client) readHandler(command string) {
 	if utils.IsExecutionModeProduction() {
-		defer getDefer()()
+		defer c.recoverFromAllErrors()()
 	}
 
-	op, err := commands.ReadCommand(command)
+	value, err := commands.ReadCommand(command)
+
 	if err != nil {
 		panic(err)
 	}
 
-	return op
+	fmt.Println(value)
 }
 
-func writeCommandShell(command string) {
+func (c *Client) writeHandler(command string) {
 	if utils.IsExecutionModeProduction() {
-		defer getDefer()()
+		defer c.recoverFromAllErrors()()
 	}
 
 	err := commands.WriteCommand(command)
@@ -77,9 +80,9 @@ func writeCommandShell(command string) {
 	}
 }
 
-func deleteCommandShell(command string) {
+func (c *Client) deleteHandler(command string) {
 	if utils.IsExecutionModeProduction() {
-		defer getDefer()()
+		defer c.recoverFromAllErrors()()
 	}
 
 	err := commands.DeleteCommand(command)
@@ -88,7 +91,7 @@ func deleteCommandShell(command string) {
 	}
 }
 
-func getDefer() func() {
+func (c *Client) recoverFromAllErrors() func() {
 	return func() {
 		if r := recover(); r != nil {
 			_, ok := r.(string)
@@ -100,4 +103,9 @@ func getDefer() func() {
 			}
 		}
 	}
+}
+
+func GetDefaultShellClient() *Client {
+	client := Client{Reader: bufio.NewReader(os.Stdin)}
+	return &client
 }
