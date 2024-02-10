@@ -9,7 +9,7 @@ import (
 )
 
 func write(k string, v string) {
-	err := commands.WriteCommand(fmt.Sprintf("%s %s %s", constants.CommandWrite, k, v))
+	err := commands.GetCommandManager().WriteHandler(fmt.Sprintf("%s %s %s", constants.CommandWrite, k, v))
 	if err != nil {
 		panic(err)
 	}

@@ -3,7 +3,24 @@ package tcp
 import (
 	"bitcask/commands"
 	"net"
+	"os"
 )
+
+var singletonServer *Server
+
+func GetTcpServer() *Server {
+	if singletonServer != nil {
+		return singletonServer
+	}
+
+	singletonServer = &Server{
+		Port:               os.Getenv("PORT"),
+		Network:            "tcp4",
+		connectionListener: nil,
+	}
+
+	return singletonServer
+}
 
 type Server struct {
 	Port               string
