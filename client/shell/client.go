@@ -10,19 +10,19 @@ import (
 	"strings"
 )
 
-var client *Client
+var singletonClient *Client
 
 func GetShellClient() *Client {
-	if client != nil {
-		return client
+	if singletonClient != nil {
+		return singletonClient
 	}
 
-	client = &Client{
+	singletonClient = &Client{
 		Reader:         bufio.NewReader(os.Stdin),
 		CommandManager: commands.GetCommandManager(),
 	}
 
-	return client
+	return singletonClient
 }
 
 type Client struct {
