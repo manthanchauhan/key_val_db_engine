@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -61,4 +62,11 @@ func LockThenDefer(mutex *sync.RWMutex) func() {
 	return func() {
 		mutex.Unlock()
 	}
+}
+
+func EqualsIgnoreCase(s1 string, s2 string) bool {
+	s1 = strings.ToUpper(strings.TrimSpace(s1))
+	s2 = strings.ToUpper(strings.TrimSpace(s2))
+
+	return s1 == s2
 }
