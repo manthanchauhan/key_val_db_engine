@@ -6,7 +6,9 @@ const LogFileMaxSizeBytes = 500
 const LogFileNameFormat = "data_%s.log"
 const DataSegmentMetaDataByteSize = 100
 
-const NotFoundMsg = "NOT FOUND"
+const ErrMsgNotFound = "NOT FOUND"
+const ErrMsgInvalidInput = "invalid input"
+const ErrMsgProtectedKeyword = "cannot use '%s' since it is a protected keyword"
 
 const ClientTypeShell = "SHELL"
 const ClientTypeTcp = "TCP"

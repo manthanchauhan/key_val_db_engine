@@ -12,7 +12,7 @@ func readNewKey() {
 	v := read(k)
 
 	hashedV := hashMap[k]
-	if v != constants.NotFoundMsg && v != hashedV {
+	if v != constants.ErrMsgNotFound && v != hashedV {
 		panic("Err")
 	}
 }
@@ -38,7 +38,7 @@ func read(k string) (v string) {
 
 	var err error
 
-	if v, err = commands.ReadCommand(fmt.Sprintf("%s %s", constants.CommandRead, k)); err != nil {
+	if v, err = commands.GetCommandManager().ReadHandler(fmt.Sprintf("%s %s", constants.CommandRead, k)); err != nil {
 		panic(err)
 	}
 

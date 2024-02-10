@@ -28,12 +28,12 @@ func start() {
 	switch utils.GetClientType() {
 
 	case constants.ClientTypeShell:
-		shell.GetDefaultShellClient().Run()
+		shell.GetShellClient().Run()
 
 	case constants.ClientTypeTcp:
 		tcp.StartServer()
 
 	default:
-		shell.GetDefaultShellClient().Run()
+		shell.GetShellClient().Run()
 	}
 }

@@ -18,7 +18,7 @@ func GetDataLocationOrPanic(key string) string {
 	dataLocation, ok := GetDataLocation(key)
 
 	if ok != true {
-		panic(constants.NotFoundMsg)
+		panic(constants.ErrMsgNotFound)
 	}
 
 	return dataLocation

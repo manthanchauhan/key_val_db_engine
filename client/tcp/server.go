@@ -1,41 +1,54 @@
 package tcp
 
 import (
-	"bitcask/config/constants"
+	"bitcask/commands"
 	"net"
-	"os"
 )
 
-func StartServer() {
-	port := os.Getenv(constants.TcpPort)
-
-	if port == "" {
-		panic("Set PORT in env")
-	}
-
-	l, err := net.Listen("tcp4", ":"+port)
-	if err != nil {
-		panic(err)
-	}
-
-	defer func(l net.Listener) {
-		err := l.Close()
-		if err != nil {
-			panic(err)
-		}
-	}(l)
-
-	listenToConnRequests(l)
+type Server struct {
+	Port               string
+	Network            string
+	connectionListener net.Listener
 }
 
-func listenToConnRequests(l net.Listener) {
+func (s *Server) Start() {
+	s.createConnectionListener()
+	defer s.closeConnectionListener()()
+	s.startConnectionListening()
+}
+
+func (s *Server) createConnectionListener() {
+	var err error
+
+	if s.connectionListener, err = net.Listen(s.Network, ":"+s.Port); err != nil {
+		panic(err)
+	}
+}
+
+func (s *Server) startConnectionListening() {
 	println("Listening to requests ...")
 
 	for {
-		c, err := l.Accept()
+		c, err := s.connectionListener.Accept()
+
 		if err != nil {
 			panic(err)
 		}
-		go handleConnection(c)
+
+		handler := connectionHandler{
+			connection:     c,
+			CommandManager: commands.GetCommandManager(),
+		}
+
+		go handler.handle()
+	}
+}
+
+func (s *Server) closeConnectionListener() func() {
+	return func() {
+		err := s.connectionListener.Close()
+		if err != nil {
+			panic(err)
+		}
 	}
 }

@@ -20,7 +20,7 @@ func Read(key string) string {
 	val := Index.GetOrPanic(key)
 
 	if utils.EqualsIgnoreCase(val, constants.DeletedValuePlaceholder) {
-		panic(constants.NotFoundMsg)
+		panic(constants.ErrMsgNotFound)
 	}
 
 	logger.SugaredLogger.Info("Found val - ", val)

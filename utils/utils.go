@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bitcask/config/constants"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -69,4 +70,16 @@ func EqualsIgnoreCase(s1 string, s2 string) bool {
 	s2 = strings.ToUpper(strings.TrimSpace(s2))
 
 	return s1 == s2
+}
+
+func ValidateNotProtectedKeyword(val string) error {
+	val = strings.TrimSpace(val)
+
+	for _, keyword := range constants.Keywords {
+		if strings.ToUpper(keyword) == strings.ToUpper(val) {
+			return errors.New(fmt.Sprintf(constants.ErrMsgProtectedKeyword, val))
+		}
+	}
+
+	return nil
 }

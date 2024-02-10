@@ -10,8 +10,24 @@ import (
 	"strings"
 )
 
+var client *Client
+
+func GetShellClient() *Client {
+	if client != nil {
+		return client
+	}
+
+	client = &Client{
+		Reader:         bufio.NewReader(os.Stdin),
+		CommandManager: commands.GetCommandManager(),
+	}
+
+	return client
+}
+
 type Client struct {
-	Reader *bufio.Reader
+	Reader         *bufio.Reader
+	CommandManager *commands.Manager
 }
 
 func (c *Client) Run() {
@@ -60,7 +76,7 @@ func (c *Client) readHandler(command string) {
 		defer c.recoverFromAllErrors()()
 	}
 
-	value, err := commands.ReadCommand(command)
+	value, err := c.CommandManager.ReadHandler(command)
 
 	if err != nil {
 		panic(err)
@@ -74,7 +90,7 @@ func (c *Client) writeHandler(command string) {
 		defer c.recoverFromAllErrors()()
 	}
 
-	err := commands.WriteCommand(command)
+	err := c.CommandManager.WriteHandler(command)
 	if err != nil {
 		panic(err)
 	}
@@ -85,7 +101,7 @@ func (c *Client) deleteHandler(command string) {
 		defer c.recoverFromAllErrors()()
 	}
 
-	err := commands.DeleteCommand(command)
+	err := c.CommandManager.DeleteHandler(command)
 	if err != nil {
 		panic(err)
 	}
@@ -103,9 +119,4 @@ func (c *Client) recoverFromAllErrors() func() {
 			}
 		}
 	}
-}
-
-func GetDefaultShellClient() *Client {
-	client := Client{Reader: bufio.NewReader(os.Stdin)}
-	return &client
 }

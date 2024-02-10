@@ -35,7 +35,7 @@ func (lsmIndex *LsmIndex) GetOrPanic(key string) string {
 	if val, isFound := lsmIndex.Get(key); isFound {
 		return val
 	} else {
-		panic(constants.NotFoundMsg)
+		panic(constants.ErrMsgNotFound)
 	}
 }
 
