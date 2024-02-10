@@ -19,3 +19,7 @@ const DataDirectoryLSMIndex = "/Users/manthan/GolandProjects/bitcask/dataLogs/Ls
 const SSTableBlockMaxKeys = 10
 const MemTableMaxSizeBytes = 50
 const MemTableWALDirectory = DataDirectoryLSMIndex + "WALs/"
+
+const DeletedValuePlaceholder = "#!DEL!#"
+
+var Keywords = []string{DeletedValuePlaceholder}

@@ -3,6 +3,8 @@ package dataIO
 import (
 	"bitcask/compressAndMerge"
 	"bitcask/config/constants"
+	"bitcask/disk"
+	"bitcask/hashIndex"
 	"bitcask/index"
 	"bitcask/logger"
 	"bitcask/lsmIndex"
@@ -16,6 +18,10 @@ func Read(key string) string {
 	logger.SugaredLogger.Info("Reading key - ", key)
 
 	val := Index.GetOrPanic(key)
+
+	if utils.EqualsIgnoreCase(val, constants.DeletedValuePlaceholder) {
+		panic(constants.NotFoundMsg)
+	}
 
 	logger.SugaredLogger.Info("Found val - ", val)
 	return val
@@ -54,4 +60,9 @@ func Init() {
 	}
 
 	go compressAndMerge.CompressionAndMergingGoRoutine()
+}
+
+func Delete(key string) {
+	disk.Delete(key)
+	hashIndex.Delete(key)
 }
