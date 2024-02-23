@@ -55,7 +55,7 @@ func (h *HashIndexDiskManager) Delete(key string) string {
 }
 
 func (h *HashIndexDiskManager) GetLogFile(fileName string, flag int) (*os.File, func(file *os.File)) {
-	f, err := os.OpenFile(fileName, flag, 0600)
+	f, err := os.OpenFile(h.DataDirectoryPath+fileName, flag, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -71,7 +71,7 @@ func (h *HashIndexDiskManager) GetLogFile(fileName string, flag int) (*os.File, 
 }
 
 func (h *HashIndexDiskManager) writeInDataSegment(key string, val string, fileName string) string {
-	f, deferFunc := h.GetLogFile(h.DataDirectoryPath+fileName, os.O_APPEND|os.O_WRONLY)
+	f, deferFunc := h.GetLogFile(fileName, os.O_APPEND|os.O_WRONLY)
 	defer deferFunc(f)
 
 	dataSegmentObj := dataSegment.DataSegment{Fdr: f}
@@ -104,7 +104,7 @@ func (h *HashIndexDiskManager) createNextDataSegment() {
 }
 
 func (h *HashIndexDiskManager) parseDataSegment(fileName string, exec func(k string, v string, byteOffset int64)) {
-	f, deferFunc := h.GetLogFile(h.DataDirectoryPath+fileName, os.O_RDONLY)
+	f, deferFunc := h.GetLogFile(fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	dataSegmentObj := dataSegment.DataSegment{Fdr: f}
@@ -149,7 +149,7 @@ func (h *HashIndexDiskManager) setLatestSegmentFileName() {
 }
 
 func (h *HashIndexDiskManager) GetCreatedAtFromSegmentFileName(fileName string) time.Time {
-	f, deferFunc := h.GetLogFile(utils.GetDataDirectoryForIndex(constants.IndexTypeHashIndex)+fileName, os.O_RDONLY)
+	f, deferFunc := h.GetLogFile(fileName, os.O_RDONLY)
 
 	defer deferFunc(f)
 

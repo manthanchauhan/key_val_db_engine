@@ -103,7 +103,7 @@ func (h *HashIndex) extractFileNameAndOffset(dataLocation string) (string, int64
 func (h *HashIndex) getValue(dataLocation string) string {
 	fileName, offset := h.extractFileNameAndOffset(dataLocation)
 
-	f, deferFunc := disk.GetLogFile(utils.GetDataDirectoryForIndex(constants.IndexTypeHashIndex)+fileName, os.O_RDONLY)
+	f, deferFunc := h.diskManager.GetLogFile(fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	dataSegmentObj := dataSegment.DataSegment{Fdr: f}
