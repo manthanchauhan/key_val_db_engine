@@ -159,3 +159,10 @@ func (h *HashIndexDiskManager) GetCreatedAtFromSegmentFileName(fileName string) 
 func (h *HashIndexDiskManager) Init() {
 	h.setLatestSegmentFileName()
 }
+
+func (h *HashIndexDiskManager) ParseDataSegment(fileName string, exec func(k string, v string, byteOffset int64)) {
+	f, deferFunc := h.GetLogFile(fileName, os.O_RDONLY)
+	defer deferFunc(f)
+
+	(&dataSegment.DataSegment{Fdr: f}).Parse(exec)
+}

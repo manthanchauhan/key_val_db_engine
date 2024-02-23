@@ -112,7 +112,7 @@ func (h *HashIndex) getValue(dataLocation string) string {
 }
 
 func (h *HashIndex) ImportDataSegment(fileName string, initValCheck func(k string) bool) {
-	disk.ParseDataSegment(fileName, utils.GetDataDirectoryForIndex(constants.IndexTypeHashIndex), func(k string, v string, byteOffset int64) {
+	h.diskManager.ParseDataSegment(fileName, func(k string, v string, byteOffset int64) {
 		if initValCheck == nil || initValCheck(k) {
 			dataLocation := utils.GetDataLocationFromByteOffset(fileName, byteOffset)
 
