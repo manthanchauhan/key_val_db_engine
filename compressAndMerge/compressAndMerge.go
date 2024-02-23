@@ -1,7 +1,7 @@
 package compressAndMerge
 
 import (
-	"bitcask/disk"
+	"bitcask/dataIO/index/hashIndex/disk"
 	"bitcask/utils"
 	"io/fs"
 	"syscall"

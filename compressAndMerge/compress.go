@@ -2,9 +2,9 @@ package compressAndMerge
 
 import (
 	"bitcask/config/constants"
-	"bitcask/disk"
-	"bitcask/disk/dataSegment"
-	"bitcask/hashIndex"
+	"bitcask/dataIO/index/hashIndex"
+	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/index/hashIndex/disk"
 	"bitcask/utils"
 	"os"
 )
@@ -27,7 +27,7 @@ func compressSegment(fileName string) {
 		if newFileIsEmpty {
 			disk.DeleteSegment(newFileName)
 		} else {
-			hashIndex.ImportDataSegment(newFileName, hashMapImportSegmentInitValCheckForCompression(fileName))
+			hashIndex.GetHashIndex().ImportDataSegment(newFileName, hashMapImportSegmentInitValCheckForCompression(fileName))
 		}
 
 		disk.DeleteSegment(fileName)
@@ -45,10 +45,12 @@ func createCompressedSegment(originalSegmentFileName string) string {
 	disk.ParseDataSegment(originalSegmentFileName, utils.GetDataDirectory(), func(k string, v string, byteOffset int64) {
 		dataLocation := utils.GetDataLocationFromByteOffset(originalSegmentFileName, byteOffset)
 
-		isUsed := !utils.EqualsIgnoreCase(v, constants.DeletedValuePlaceholder) && (dataLocation == hashIndex.GetDataLocationOrPanic(k))
+		if !utils.EqualsIgnoreCase(v, constants.DeletedValuePlaceholder) {
+			hashedDataLocation, isFound := hashIndex.GetHashIndex().GetDataLocation(k)
 
-		if isUsed {
-			dataSegment.Write(k, v, f)
+			if isFound && hashedDataLocation == dataLocation {
+				dataSegment.Write(k, v, f)
+			}
 		}
 	})
 
@@ -57,7 +59,7 @@ func createCompressedSegment(originalSegmentFileName string) string {
 
 func hashMapImportSegmentInitValCheckForCompression(compressedFileName string) func(k string) bool {
 	return func(k string) bool {
-		val, ok := hashIndex.GetDataLocation(k)
+		val, ok := hashIndex.GetHashIndex().GetDataLocation(k)
 
 		if !ok {
 			return false

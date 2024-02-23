@@ -9,6 +9,7 @@ import (
 )
 
 type deleteManager struct {
+	dataIOManager *dataIO.Manager
 }
 
 func (d *deleteManager) handler(command string) error {
@@ -17,7 +18,7 @@ func (d *deleteManager) handler(command string) error {
 	}
 
 	key := strings.Split(command, " ")[1]
-	dataIO.Delete(key)
+	d.dataIOManager.DeleteHandler(key)
 
 	return nil
 }
@@ -33,6 +34,10 @@ func (d *deleteManager) validate(command string) error {
 
 	if err := utils.ValidateNotProtectedKeyword(key); err != nil {
 		return err
+	}
+
+	if key == "" {
+		return errors.New(constants.ErrMsgInvalidInput)
 	}
 
 	return nil

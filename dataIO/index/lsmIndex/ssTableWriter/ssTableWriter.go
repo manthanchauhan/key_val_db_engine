@@ -1,9 +1,9 @@
 package ssTableWriter
 
 import (
+	"bitcask/dataIO/index/lsmIndex/memTable"
+	"bitcask/dataIO/index/lsmIndex/ssTable"
 	"bitcask/logger"
-	"bitcask/lsmIndex/memTable"
-	"bitcask/lsmIndex/ssTable"
 	"fmt"
 )
 

@@ -2,9 +2,9 @@ package compressAndMerge
 
 import (
 	"bitcask/config/constants"
-	"bitcask/disk"
-	"bitcask/disk/dataSegment"
-	"bitcask/hashIndex"
+	"bitcask/dataIO/index/hashIndex"
+	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/index/hashIndex/disk"
 	"bitcask/utils"
 	"os"
 )
@@ -34,7 +34,7 @@ func merge() {
 		}
 
 		mergedSegmentFileName := mergeSegments(fileNames[start:end])
-		hashIndex.ImportDataSegment(mergedSegmentFileName, hashMapImportSegmentInitValCheckForMerging(fileNames[start:end]))
+		hashIndex.GetHashIndex().ImportDataSegment(mergedSegmentFileName, hashMapImportSegmentInitValCheckForMerging(fileNames[start:end]))
 
 		deleteSegments(fileNames[start:end])
 
@@ -67,7 +67,7 @@ func deleteSegments(fileNames []string) {
 
 func hashMapImportSegmentInitValCheckForMerging(mergedFileNames []string) func(k string) bool {
 	return func(k string) bool {
-		val, ok := hashIndex.GetDataLocation(k)
+		val, ok := hashIndex.GetHashIndex().GetDataLocation(k)
 
 		if !ok {
 			return false

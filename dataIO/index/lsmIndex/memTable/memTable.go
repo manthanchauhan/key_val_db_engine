@@ -2,8 +2,8 @@ package memTable
 
 import (
 	"bitcask/config/constants"
-	"bitcask/disk"
-	"bitcask/disk/dataSegment"
+	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/index/hashIndex/disk"
 	"bitcask/utils"
 	"fmt"
 	"github.com/emirpasic/gods/trees/redblacktree"

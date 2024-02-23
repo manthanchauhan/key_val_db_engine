@@ -2,12 +2,13 @@ package lsmIndex
 
 import (
 	"bitcask/config/constants"
-	"bitcask/disk"
+	"bitcask/dataIO/index/hashIndex/disk"
+	"bitcask/dataIO/index/lsmIndex/memTable"
+	"bitcask/dataIO/index/lsmIndex/ssTable"
+	"bitcask/dataIO/index/lsmIndex/ssTableWriter"
 	"bitcask/logger"
-	"bitcask/lsmIndex/memTable"
-	"bitcask/lsmIndex/ssTable"
-	"bitcask/lsmIndex/ssTableWriter"
 	"bitcask/utils"
+	"errors"
 	"fmt"
 	"sync"
 )
@@ -31,24 +32,16 @@ type LsmIndex struct {
 	isInitialized bool
 }
 
-func (lsmIndex *LsmIndex) GetOrPanic(key string) string {
-	if val, isFound := lsmIndex.Get(key); isFound {
-		return val
-	} else {
-		panic(constants.ErrMsgNotFound)
-	}
-}
-
-func (lsmIndex *LsmIndex) Get(key string) (string, bool) {
+func (lsmIndex *LsmIndex) Get(key string) (string, error) {
 	if val, isFound := lsmIndex.getFromMemTables(key); isFound {
-		return val, isFound
+		return val, nil
 	}
 
 	if val, isFound := lsmIndex.getFromSSTables(key); isFound {
-		return val, isFound
+		return val, nil
 	}
 
-	return "", false
+	return "", errors.New(constants.ErrMsgNotFound)
 }
 
 func (lsmIndex *LsmIndex) getFromMemTables(key string) (string, bool) {
@@ -288,6 +281,11 @@ func (lsmIndex *LsmIndex) insertNewSSTable(ssTable *ssTable.SSTable) {
 	defer utils.LockThenDefer(lsmIndex.ssTableListWriteMutex)()
 
 	lsmIndex.ssTableList = append(lsmIndex.ssTableList, ssTable)
+}
+
+func (lsmIndex *LsmIndex) Delete(key string) error {
+	//TODO implement me
+	panic("implement me")
 }
 
 func NewLsmIndex() (*LsmIndex, error) {

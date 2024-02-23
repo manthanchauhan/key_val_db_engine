@@ -2,10 +2,10 @@ package ssTable
 
 import (
 	"bitcask/config/constants"
-	"bitcask/disk"
-	"bitcask/disk/dataSegment"
+	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/index/hashIndex/disk"
+	"bitcask/dataIO/index/lsmIndex/memTable"
 	"bitcask/logger"
-	"bitcask/lsmIndex/memTable"
 	orderedMap "github.com/wk8/go-ordered-map"
 	"os"
 )

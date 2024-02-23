@@ -9,6 +9,7 @@ import (
 )
 
 type readManager struct {
+	dataIOManager *dataIO.Manager
 }
 
 func (m *readManager) handler(command string) (value string, err error) {
@@ -18,7 +19,7 @@ func (m *readManager) handler(command string) (value string, err error) {
 
 	key := strings.Split(command, " ")[1]
 
-	return dataIO.Read(key), nil
+	return m.dataIOManager.ReadHandler(key), nil
 }
 
 func (m *readManager) validate(command string) error {
@@ -32,6 +33,10 @@ func (m *readManager) validate(command string) error {
 
 	if err := utils.ValidateNotProtectedKeyword(key); err != nil {
 		return err
+	}
+
+	if key == "" {
+		return errors.New(constants.ErrMsgInvalidInput)
 	}
 
 	return nil

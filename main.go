@@ -15,7 +15,7 @@ func main() {
 
 	logger.SugaredLogger.Info("Hello World")
 
-	dataIO.Init()
+	_ = dataIO.GetDataIOManager()
 
 	if !utils.IsExecutionModeProduction() {
 		test.RunTests()

@@ -36,6 +36,24 @@ func GetDataDirectory() string {
 	}
 }
 
+func GetDataDirectoryForIndex(indexType string) string {
+	if IsExecutionModeProduction() {
+		switch indexType {
+		case constants.IndexTypeLSMIndex:
+			return constants.DataDirectoryLSMIndex
+		default:
+			return "/Users/manthan/GolandProjects/bitcask/dataLogs/hashIndexDataLogs/"
+		}
+	} else {
+		switch indexType {
+		case constants.IndexTypeLSMIndex:
+			return "/Users/manthan/GolandProjects/bitcask/dataLogsTest/LsmIndexDataLogs/"
+		default:
+			return "/Users/manthan/GolandProjects/bitcask/dataLogsTest/hashIndexDataLogs/"
+		}
+	}
+}
+
 func IsExecutionModeProduction() bool {
 	return os.Getenv(constants.ModeEnvVar) == "prod"
 }

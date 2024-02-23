@@ -2,6 +2,7 @@ package commands
 
 import (
 	"bitcask/config/constants"
+	"bitcask/dataIO"
 	"errors"
 	"strings"
 )
@@ -14,9 +15,9 @@ func GetCommandManager() *Manager {
 	}
 
 	singletonManager = &Manager{
-		readManager:   &readManager{},
-		writeManager:  &writeManager{},
-		deleteManager: &deleteManager{},
+		readManager:   &readManager{dataIOManager: dataIO.GetDataIOManager()},
+		writeManager:  &writeManager{dataIOManager: dataIO.GetDataIOManager()},
+		deleteManager: &deleteManager{dataIOManager: dataIO.GetDataIOManager()},
 	}
 
 	return singletonManager

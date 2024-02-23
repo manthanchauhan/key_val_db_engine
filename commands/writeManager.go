@@ -9,6 +9,7 @@ import (
 )
 
 type writeManager struct {
+	dataIOManager *dataIO.Manager
 }
 
 func (w *writeManager) handler(command string) error {
@@ -20,7 +21,7 @@ func (w *writeManager) handler(command string) error {
 	key := words[1]
 	value := strings.Join(words[2:], " ")
 
-	dataIO.Write(key, value)
+	w.dataIOManager.WriteHandler(key, value)
 	return nil
 }
 
@@ -41,6 +42,10 @@ func (w *writeManager) validate(command string) error {
 
 	if err := utils.ValidateNotProtectedKeyword(value); err != nil {
 		return err
+	}
+
+	if key == "" || value == "" {
+		return errors.New(constants.ErrMsgInvalidInput)
 	}
 
 	return nil

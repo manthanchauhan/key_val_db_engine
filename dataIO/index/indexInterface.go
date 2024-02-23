@@ -1,9 +1,9 @@
 package index
 
 type Index interface {
-	GetOrPanic(key string) string
-	Get(key string) (string, bool)
+	Get(key string) (string, error)
 	Set(key string, val string) error
+	Delete(key string) error
 	Init()
 	ImportData()
 	GetDataDirectory() string
