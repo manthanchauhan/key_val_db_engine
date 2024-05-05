@@ -11,7 +11,7 @@
 SSTable size - `5KB`  
 Sparse Index size - `10 Keys`
 
-Tests count - 10,000  
+Tests count - `10,000`  
 Tests took `10m2.598477625s`
 
 READ NEW - 2523  
@@ -26,6 +26,7 @@ WRITE OLD - 2502
 SSTable size - `5KB`  
 Sparse Index size - `100 Keys`
 
+Tests count - `10,000`  
 Tests took `30.6950765s`
 
 READ NEW - 2490  
