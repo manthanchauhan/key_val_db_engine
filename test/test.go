@@ -1,12 +1,10 @@
 package test
 
 import (
-	"bitcask/logger"
+	"bitcask/config/constants"
 	"bitcask/utils"
 	"fmt"
 	"math/rand"
-	"os"
-	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -25,37 +23,15 @@ func RunTests() {
 }
 
 func ClearDataLogs() {
-	files, err := os.ReadDir(utils.GetDataDirectory())
-
+	err := utils.ClearDataFromDirectory(utils.GetDataDirectory())
 	if err != nil {
-		fmt.Println(err)
-		return
+		panic(err)
 	}
 
-	// Create a pattern to match the files we want to remove.
-	pattern := "*.log"
-
-	// Iterate over the files and remove any that match the pattern.
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-
-		if matched, err := filepath.Match(pattern, file.Name()); err != nil {
-			fmt.Println(err)
-			return
-		} else if matched {
-			logger.SugaredLogger.Infof("Clearning test data log file %s", file.Name())
-
-			err := os.Remove(utils.GetDataDirectory() + "/" + file.Name())
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-		}
+	err = utils.ClearDataFromDirectory(utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs")
+	if err != nil {
+		panic(err)
 	}
-
-	fmt.Println("Successfully removed all test data.")
 }
 
 func runTests() {

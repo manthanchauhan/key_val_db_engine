@@ -114,8 +114,8 @@ func NewMemTable() (*MemTable, error) {
 		putMutex:             &sync.RWMutex{},
 		IsBeingWrittenToDisk: false,
 		Id:                   time.Now().UnixNano(),
-		WalFileName:          disk.CreateNewDataSegmentInDirectory(constants.MemTableWALDirectory),
-		walDirectory:         constants.MemTableWALDirectory,
+		WalFileName:          disk.CreateNewDataSegmentInDirectory(utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs"),
+		walDirectory:         utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs",
 	}
 
 	if err := memTable.Init(); err != nil {

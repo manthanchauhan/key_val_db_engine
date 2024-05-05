@@ -2,9 +2,11 @@ package utils
 
 import (
 	"bitcask/config/constants"
+	"bitcask/logger"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -110,5 +112,36 @@ func ValidateNotProtectedKeyword(val string) error {
 		}
 	}
 
+	return nil
+}
+
+func ClearDataFromDirectory(directory string) error {
+	files, err := os.ReadDir(directory)
+
+	if err != nil {
+		return err
+	}
+
+	dataFileNamePattern := "*.log"
+
+	// Iterate over the files and remove any that match the dataFileNamePattern.
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
+		if matched, err := filepath.Match(dataFileNamePattern, file.Name()); err != nil {
+			return err
+		} else if matched {
+			logger.SugaredLogger.Infof("Clearning data file %s", file.Name())
+
+			err := os.Remove(directory + "/" + file.Name())
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	logger.SugaredLogger.Infof("Successfully cleared all data.")
 	return nil
 }

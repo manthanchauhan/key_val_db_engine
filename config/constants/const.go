@@ -27,9 +27,8 @@ const DataDirectoryLSMIndexTest = DataDirectoryTest + "/LsmIndexDataLogs"
 const DataDirectoryHashIndex = DataDirectory + "/hashIndexDataLogs"
 const DataDirectoryHashIndexTest = DataDirectoryTest + "/hashIndexDataLogs"
 
-const SSTableBlockMaxKeys = 10
-const MemTableMaxSizeBytes = 50
-const MemTableWALDirectory = DataDirectoryLSMIndex + "/WALs"
+const SSTableBlockMaxKeys = 100
+const MemTableMaxSizeBytes = 5000
 
 const DeletedValuePlaceholder = "#!DEL!#"
 

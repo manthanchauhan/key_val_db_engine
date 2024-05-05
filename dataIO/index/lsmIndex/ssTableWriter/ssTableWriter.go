@@ -48,8 +48,6 @@ func (s *SSTableWriter) Init() {
 					SSTable  *ssTable.SSTable
 					MemTable *memTable.MemTable
 				}{ssTable_, memTable_}
-
-				logger.SugaredLogger.Infof("MemTable %v queued for destruction", memTable_)
 			}
 		}
 	}

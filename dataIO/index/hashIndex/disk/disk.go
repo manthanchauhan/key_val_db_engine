@@ -101,6 +101,10 @@ func GetDataSegmentFileNameList(dataDirectory string) []string {
 	var fileNames []string
 
 	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+
 		fileNames = append(fileNames, entry.Name())
 	}
 

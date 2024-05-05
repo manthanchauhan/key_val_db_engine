@@ -151,7 +151,7 @@ func (lsmIndex *LsmIndex) ImportData() {
 		lsmIndex.ImportDataSegment(fileName)
 	}
 
-	walFileNames := disk.GetDataSegmentFileNameList(constants.MemTableWALDirectory)
+	walFileNames := disk.GetDataSegmentFileNameList(utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs")
 
 	var filteredWALNames []string
 
@@ -195,7 +195,7 @@ func (lsmIndex *LsmIndex) ImportDataSegment(fileName string) {
 }
 
 func (lsmIndex *LsmIndex) ImportWAL(fileName string) {
-	memTable_, err := memTable.FromWAL(fileName, constants.MemTableWALDirectory)
+	memTable_, err := memTable.FromWAL(fileName, utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex)+"/WALS")
 	if err != nil {
 		panic(err)
 	}
