@@ -25,7 +25,10 @@ type LsmIndex struct {
 	ssTableWriter      *ssTableWriter.SSTableWriter
 	removeMemTableChan chan *memTable.MemTable
 
-	insertSSTableChan chan *ssTable.SSTable
+	insertSSTableChan chan *struct {
+		SSTable  *ssTable.SSTable
+		MemTable *memTable.MemTable
+	}
 
 	dataDirectory string
 
@@ -217,7 +220,10 @@ func (lsmIndex *LsmIndex) Init() {
 	lsmIndex.ssTableListWriteMutex = &sync.RWMutex{}
 
 	lsmIndex.removeMemTableChan = make(chan *memTable.MemTable)
-	lsmIndex.insertSSTableChan = make(chan *ssTable.SSTable)
+	lsmIndex.insertSSTableChan = make(chan *struct {
+		SSTable  *ssTable.SSTable
+		MemTable *memTable.MemTable
+	})
 
 	lsmIndex.ssTableWriter = &ssTableWriter.SSTableWriter{
 		SuccessChan:    &lsmIndex.removeMemTableChan,
@@ -270,10 +276,13 @@ func (lsmIndex *LsmIndex) consumeInsertSSTableChan() {
 	go func() {
 		for {
 			select {
-			case ssTable_ := <-lsmIndex.insertSSTableChan:
-				logger.SugaredLogger.Infof("Inserting SSTable %v", ssTable_)
-				lsmIndex.insertNewSSTable(ssTable_)
-				logger.SugaredLogger.Infof("Inserted SSTable %v", ssTable_)
+			case pairSsTableMemTable := <-lsmIndex.insertSSTableChan:
+				logger.SugaredLogger.Infof("Inserting SSTable %v", pairSsTableMemTable.SSTable)
+				lsmIndex.insertNewSSTable(pairSsTableMemTable.SSTable)
+				logger.SugaredLogger.Infof("Inserted SSTable %v", pairSsTableMemTable.SSTable)
+
+				lsmIndex.removeMemTableChan <- pairSsTableMemTable.MemTable
+				logger.SugaredLogger.Infof("MemTable %v queued for destruction", pairSsTableMemTable.MemTable)
 			}
 		}
 	}()

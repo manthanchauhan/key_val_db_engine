@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 )
 
 var hashMap = map[string]string{}
@@ -60,7 +61,9 @@ func ClearDataLogs() {
 func runTests() {
 	println("Running tests")
 
-	for iterations := 0; iterations < 100000; iterations++ {
+	startTime := time.Now()
+
+	for iterations := 0; iterations < 10000; iterations++ {
 		randInt := rand.Int()
 
 		divisor := 4
@@ -84,6 +87,10 @@ func runTests() {
 			readOldKey()
 		}
 	}
+
+	endTime := time.Now()
+
+	fmt.Printf("Tests took %s\n", endTime.Sub(startTime))
 
 	println()
 	for k, v := range testHashMap {

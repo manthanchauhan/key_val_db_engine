@@ -10,7 +10,10 @@ import (
 type SSTableWriter struct {
 	SuccessChan    *chan *memTable.MemTable
 	jobChan        chan *memTable.MemTable
-	NewSSTableChan *chan *ssTable.SSTable
+	NewSSTableChan *chan *struct {
+		SSTable  *ssTable.SSTable
+		MemTable *memTable.MemTable
+	}
 
 	DataDirectory string
 
@@ -41,8 +44,10 @@ func (s *SSTableWriter) Init() {
 
 				ssTable_ := s.writeMemTableToSSTable(memTable_)
 
-				*s.SuccessChan <- memTable_
-				*s.NewSSTableChan <- ssTable_
+				*s.NewSSTableChan <- &struct {
+					SSTable  *ssTable.SSTable
+					MemTable *memTable.MemTable
+				}{ssTable_, memTable_}
 
 				logger.SugaredLogger.Infof("MemTable %v queued for destruction", memTable_)
 			}
