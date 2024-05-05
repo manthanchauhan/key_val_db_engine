@@ -65,6 +65,8 @@ func (lsmIndex *LsmIndex) getFromSSTables(key string) (string, bool) {
 	for i = size - 1; i >= 0; i-- {
 		ssTable_ := lsmIndex.ssTableList[i]
 
+		logger.SugaredLogger.Infof("Searching in SSTable %s/%s", ssTable_.Directory, ssTable_.FileName)
+
 		if val, isFound := ssTable_.Get(key); isFound {
 			return val, true
 		}
@@ -280,6 +282,7 @@ func (lsmIndex *LsmIndex) consumeInsertSSTableChan() {
 func (lsmIndex *LsmIndex) insertNewSSTable(ssTable *ssTable.SSTable) {
 	defer utils.LockThenDefer(lsmIndex.ssTableListWriteMutex)()
 
+	logger.SugaredLogger.Infof("Inserting new SSTable %s in lsmIndex object", ssTable.FileName)
 	lsmIndex.ssTableList = append(lsmIndex.ssTableList, ssTable)
 }
 

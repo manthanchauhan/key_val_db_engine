@@ -55,7 +55,7 @@ func (h *HashIndexDiskManager) Delete(key string) string {
 }
 
 func (h *HashIndexDiskManager) GetLogFile(fileName string, flag int) (*os.File, func(file *os.File)) {
-	f, err := os.OpenFile(h.DataDirectoryPath+fileName, flag, 0600)
+	f, err := os.OpenFile(h.DataDirectoryPath+"/"+fileName, flag, 0600)
 	if err != nil {
 		panic(err)
 	}
@@ -84,7 +84,7 @@ func (h *HashIndexDiskManager) writeInDataSegment(key string, val string, fileNa
 }
 
 func (h *HashIndexDiskManager) getSegmentFileSize(fileName string) int64 {
-	fileStat, err := os.Stat(h.DataDirectoryPath + fileName)
+	fileStat, err := os.Stat(h.DataDirectoryPath + "/" + fileName)
 
 	if err != nil {
 		panic(err)

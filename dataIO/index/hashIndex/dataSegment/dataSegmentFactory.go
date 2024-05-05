@@ -31,7 +31,7 @@ type Factory struct {
 func (b *Factory) CreateDataSegment() string {
 	fileName := fmt.Sprintf(b.fileNameFormat, strconv.FormatInt(time.Now().UnixNano(), 10))
 
-	file, err := os.Create(b.dataDirectoryPath + fileName)
+	file, err := os.Create(b.dataDirectoryPath + "/" + fileName)
 	if err != nil {
 		panic(err)
 	}

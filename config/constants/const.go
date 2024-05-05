@@ -16,11 +16,20 @@ const ClientTypeTcp = "TCP"
 const IndexTypeHashIndex = "HASH_INDEX"
 const IndexTypeLSMIndex = "LSM_INDEX"
 
-const DataDirectoryLSMIndex = "/Users/manthan/GolandProjects/bitcask/dataLogs/LsmIndexDataLogs/"
+const LogDirectory = "/Users/manthanchauhan/GolandProjects/bitcask/log"
+
+const DataDirectory = "/Users/manthanchauhan/GolandProjects/bitcask/dataLogs"
+const DataDirectoryTest = DataDirectory + "/testDataLogs"
+
+const DataDirectoryLSMIndex = DataDirectory + "/LsmIndexDataLogs"
+const DataDirectoryLSMIndexTest = DataDirectoryTest + "/LsmIndexDataLogs"
+
+const DataDirectoryHashIndex = DataDirectory + "/hashIndexDataLogs"
+const DataDirectoryHashIndexTest = DataDirectoryTest + "/hashIndexDataLogs"
 
 const SSTableBlockMaxKeys = 10
 const MemTableMaxSizeBytes = 50
-const MemTableWALDirectory = DataDirectoryLSMIndex + "WALs/"
+const MemTableWALDirectory = DataDirectoryLSMIndex + "/WALs"
 
 const DeletedValuePlaceholder = "#!DEL!#"
 

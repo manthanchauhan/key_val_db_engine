@@ -24,14 +24,14 @@ func GetDataDirectory() string {
 		case constants.IndexTypeLSMIndex:
 			return constants.DataDirectoryLSMIndex
 		default:
-			return "/Users/manthan/GolandProjects/bitcask/dataLogs/"
+			return constants.DataDirectoryHashIndex
 		}
 	} else {
 		switch GetIndexType() {
 		case constants.IndexTypeLSMIndex:
-			return "/Users/manthan/GolandProjects/bitcask/dataLogsTest/LsmIndexDataLogs/"
+			return constants.DataDirectoryLSMIndexTest
 		default:
-			return "/Users/manthan/GolandProjects/bitcask/dataLogs/"
+			return constants.DataDirectoryHashIndexTest
 		}
 	}
 }
@@ -42,14 +42,14 @@ func GetDataDirectoryForIndex(indexType string) string {
 		case constants.IndexTypeLSMIndex:
 			return constants.DataDirectoryLSMIndex
 		default:
-			return "/Users/manthan/GolandProjects/bitcask/dataLogs/hashIndexDataLogs/"
+			return constants.DataDirectoryHashIndex
 		}
 	} else {
 		switch indexType {
 		case constants.IndexTypeLSMIndex:
-			return "/Users/manthan/GolandProjects/bitcask/dataLogsTest/LsmIndexDataLogs/"
+			return constants.DataDirectoryLSMIndexTest
 		default:
-			return "/Users/manthan/GolandProjects/bitcask/dataLogsTest/hashIndexDataLogs/"
+			return constants.DataDirectoryHashIndexTest
 		}
 	}
 }
@@ -68,11 +68,22 @@ func Contains(s []string, e string) bool {
 }
 
 func GetClientType() string {
-	return os.Getenv(constants.ClientType)
+	var envClientType = os.Getenv(constants.ClientType)
+
+	if envClientType == "" {
+		return constants.ClientTypeShell
+	}
+
+	return envClientType
 }
 
 func GetIndexType() string {
-	return os.Getenv(constants.IndexType)
+	var envIndexType = os.Getenv(constants.IndexType)
+
+	if envIndexType == "" {
+		return constants.IndexTypeLSMIndex
+	}
+	return envIndexType
 }
 
 func LockThenDefer(mutex *sync.RWMutex) func() {

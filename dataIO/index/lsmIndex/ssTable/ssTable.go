@@ -12,8 +12,8 @@ import (
 
 type SSTable struct {
 	hashMap   *orderedMap.OrderedMap
-	fileName  string
-	directory string
+	FileName  string
+	Directory string
 }
 
 func (s *SSTable) Get(key string) (string, bool) {
@@ -54,7 +54,7 @@ func (s *SSTable) getBlockOffset(key string) (*int64, error) {
 }
 
 func (s *SSTable) getValueFromBlock(key string, blockOffset int64) (*string, error) {
-	f, deferFunc := disk.GetLogFile(s.directory+s.fileName, os.O_RDONLY)
+	f, deferFunc := disk.GetLogFile(s.Directory+"/"+s.FileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	scanner := dataSegment.GetDataLogScanner(f, &blockOffset)
@@ -83,7 +83,7 @@ func (s *SSTable) buildIndex() {
 
 	s.hashMap = orderedMap.New()
 
-	disk.ParseDataSegment(s.fileName, s.directory, func(k string, v string, byteOffset int64) {
+	disk.ParseDataSegment(s.FileName, s.Directory, func(k string, v string, byteOffset int64) {
 		if i%constants.SSTableBlockMaxKeys == 0 {
 			s.hashMap.Set(k, byteOffset)
 		}
@@ -94,33 +94,33 @@ func (s *SSTable) buildIndex() {
 
 func NewSSTableFromMemTable(memTable *memTable.MemTable, directory string) (*SSTable, error) {
 	ssTable := SSTable{
-		directory: directory,
+		Directory: directory,
 	}
 
-	ssTable.fileName = disk.CreateNewDataSegmentInDirectory(directory)
+	ssTable.FileName = disk.CreateNewDataSegmentInDirectory(directory)
 
-	logger.SugaredLogger.Infof("Created new SSTable %s", ssTable.fileName)
+	logger.SugaredLogger.Infof("Created new SSTable %s", ssTable.FileName)
 
 	kvPairs := memTable.GetKeyValPairs()
 
-	f, deferFunc := disk.GetLogFile(ssTable.directory+ssTable.fileName, os.O_WRONLY|os.O_APPEND)
+	f, deferFunc := disk.GetLogFile(ssTable.Directory+"/"+ssTable.FileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
 	dataSegment.WriteMany(kvPairs, f)
 
 	ssTable.buildIndex()
 
-	logger.SugaredLogger.Infof("Memtable %v written to SSTable %s", memTable, ssTable.fileName)
+	logger.SugaredLogger.Infof("Memtable %v written to SSTable %s", memTable, ssTable.FileName)
 
 	return &ssTable, nil
 }
 
 func NewSSTableFromFileName(fileName string, directory string) *SSTable {
 	ssTable := SSTable{
-		directory: directory,
+		Directory: directory,
 	}
 
-	ssTable.fileName = fileName
+	ssTable.FileName = fileName
 	ssTable.buildIndex()
 
 	return &ssTable

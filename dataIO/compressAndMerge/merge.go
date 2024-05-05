@@ -5,6 +5,7 @@ import (
 	"bitcask/dataIO/index/hashIndex"
 	"bitcask/dataIO/index/hashIndex/dataSegment"
 	"bitcask/dataIO/index/hashIndex/disk"
+	"bitcask/logger"
 	"bitcask/utils"
 	"os"
 )
@@ -45,7 +46,7 @@ func merge() {
 func mergeSegments(fileNames []string) string {
 	newFileName := disk.CreateNewDataSegment()
 
-	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+newFileName, os.O_WRONLY|os.O_APPEND)
+	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+"/"+newFileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
 	execFunc := func(k string, v string, byteOffset int64) {
@@ -62,6 +63,7 @@ func mergeSegments(fileNames []string) string {
 func deleteSegments(fileNames []string) {
 	for _, fileName := range fileNames {
 		disk.DeleteSegment(fileName)
+		logger.SugaredLogger.Infof("Deleting %s", fileName)
 	}
 }
 

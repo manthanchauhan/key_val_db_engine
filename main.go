@@ -15,10 +15,15 @@ func main() {
 
 	logger.SugaredLogger.Info("Hello World")
 
+	if !utils.IsExecutionModeProduction() {
+		test.ClearDataLogs()
+	}
+
 	_ = dataIO.GetDataIOManager()
 
 	if !utils.IsExecutionModeProduction() {
 		test.RunTests()
+		test.ClearDataLogs()
 	} else {
 		start()
 	}

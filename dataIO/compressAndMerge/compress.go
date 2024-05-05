@@ -5,6 +5,7 @@ import (
 	"bitcask/dataIO/index/hashIndex"
 	"bitcask/dataIO/index/hashIndex/dataSegment"
 	"bitcask/dataIO/index/hashIndex/disk"
+	"bitcask/logger"
 	"bitcask/utils"
 	"os"
 )
@@ -31,6 +32,7 @@ func compressSegment(fileName string) {
 		}
 
 		disk.DeleteSegment(fileName)
+		logger.SugaredLogger.Infof("Deleting %s", fileName)
 	} else {
 		disk.DeleteSegment(newFileName)
 	}
@@ -39,7 +41,7 @@ func compressSegment(fileName string) {
 func createCompressedSegment(originalSegmentFileName string) string {
 	newFileName := disk.CreateNewDataSegment()
 
-	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+newFileName, os.O_WRONLY|os.O_APPEND)
+	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+"/"+newFileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
 	disk.ParseDataSegment(originalSegmentFileName, utils.GetDataDirectory(), func(k string, v string, byteOffset int64) {

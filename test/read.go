@@ -13,7 +13,7 @@ func readNewKey() {
 
 	hashedV := hashMap[k]
 	if v != constants.ErrMsgNotFound && v != hashedV {
-		panic("Err")
+		panic(fmt.Sprintf("Value '%s' does not match '%s' for key '%s'", v, hashedV, k))
 	}
 }
 
@@ -24,7 +24,7 @@ func readOldKey() {
 	hashedV := hashMap[k]
 
 	if v != hashedV {
-		panic("Err")
+		panic(fmt.Sprintf("Value %s does not match %s for key %s", v, hashedV, k))
 	}
 }
 

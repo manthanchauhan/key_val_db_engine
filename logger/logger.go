@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bitcask/config/constants"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -29,10 +30,10 @@ func Init() {
 
 func getLumberJackLogger() *lumberjack.Logger {
 	return &lumberjack.Logger{
-		Filename:   "/Users/manthan/GolandProjects/bitcask/log/log.log",
-		MaxSize:    10, // megabytes
-		MaxBackups: 3,  // number of log files
-		MaxAge:     3,  // days
+		Filename:   constants.LogDirectory + "/log.log",
+		MaxSize:    2, // megabytes
+		MaxBackups: 3, // number of log files
+		MaxAge:     3, // days
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"bitcask/config/constants"
 	"bitcask/dataIO/index/hashIndex/dataSegment"
 	"bitcask/dataIO/index/hashIndex/disk"
+	"bitcask/logger"
 	"bitcask/utils"
 	"fmt"
 	"github.com/emirpasic/gods/trees/redblacktree"
@@ -51,7 +52,7 @@ func (memTable *MemTable) put(key string, val string) error {
 }
 
 func (memTable *MemTable) writeWAL(key string, val string) error {
-	f, deferFunc := disk.GetLogFile(memTable.walDirectory+memTable.WalFileName, os.O_APPEND|os.O_WRONLY)
+	f, deferFunc := disk.GetLogFile(memTable.walDirectory+"/"+memTable.WalFileName, os.O_APPEND|os.O_WRONLY)
 	defer deferFunc(f)
 
 	dataSegment.Write(key, val, f)
@@ -92,10 +93,12 @@ func (memTable *MemTable) String() string {
 }
 
 func (memTable *MemTable) deleteWAL() error {
-	return os.Remove(memTable.walDirectory + memTable.WalFileName)
+	return os.Remove(memTable.walDirectory + "/" + memTable.WalFileName)
 }
 
 func (memTable *MemTable) IsWrittenToSSTable() {
+	logger.SugaredLogger.Infof("Removing " + memTable.walDirectory + "/" + memTable.WalFileName)
+
 	if err := memTable.deleteWAL(); err != nil {
 		panic(err)
 	}

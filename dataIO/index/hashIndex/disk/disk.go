@@ -3,6 +3,7 @@ package disk
 import (
 	"bitcask/config/constants"
 	dataSegment2 "bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/logger"
 	"bitcask/utils"
 	"fmt"
 	"os"
@@ -15,7 +16,7 @@ import (
 var LatestSegmentName = ""
 
 func GetSegmentFileSize(fileName string) int64 {
-	fileStat, err := os.Stat(utils.GetDataDirectory() + fileName)
+	fileStat, err := os.Stat(utils.GetDataDirectory() + "/" + fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -28,7 +29,9 @@ func DeleteSegment(fileName string) {
 		panic("Deleting latest segment")
 	}
 
-	err := os.Remove(utils.GetDataDirectory() + fileName)
+	logger.SugaredLogger.Infof("Removing file %s after compress & merge", fileName)
+
+	err := os.Remove(utils.GetDataDirectory() + "/" + fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -65,7 +68,7 @@ func ExtractFileNameAndOffset(dataLocation string) (string, int64) {
 func CreateNewDataSegmentInDirectory(dataDirectory string) string {
 	fileName := fmt.Sprintf(constants.LogFileNameFormat, strconv.FormatInt(time.Now().UnixNano(), 10))
 
-	file, err := os.Create(dataDirectory + fileName)
+	file, err := os.Create(dataDirectory + "/" + fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -105,7 +108,7 @@ func GetDataSegmentFileNameList(dataDirectory string) []string {
 }
 
 func ParseDataSegment(fileName string, directory string, exec func(k string, v string, byteOffset int64)) {
-	f, deferFunc := GetLogFile(directory+fileName, os.O_RDONLY)
+	f, deferFunc := GetLogFile(directory+"/"+fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	dataSegment2.ParseDataSegment(f, exec)
