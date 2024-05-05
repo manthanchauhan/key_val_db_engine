@@ -4,12 +4,10 @@
    2. https://opensource.com/article/18/5/building-concurrent-tcp-server-go
 
 # Benchmarks   
-## Initial LSM Index 
-[x] Sparse Indexing   
-[ ] Binary Search on Sparse Indexes  
-
+## Initial LSM Index
 SSTable size - `5KB`  
-Sparse Index size - `10 Keys`
+Sparse Index size - `10 Keys`  
+Sparse Index search - `Linear Search`
 
 Tests count - `10,000`  
 Tests took `10m2.598477625s`
@@ -20,11 +18,9 @@ READ OLD - 2501
 WRITE OLD - 2502  
 
 ## Binary Search on Sparse Indexes
-[x] Sparse Indexing  
-[x] Binary Search on Sparse Indexes  
-
 SSTable size - `5KB`  
-Sparse Index size - `100 Keys`
+Sparse Index size - `100 Keys`  
+Sparse Index search - `Binary Search`
 
 Tests count - `10,000`  
 Tests took `30.6950765s`
