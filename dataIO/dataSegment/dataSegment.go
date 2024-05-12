@@ -2,11 +2,14 @@ package dataSegment
 
 import (
 	"bitcask/config/constants"
+	"bitcask/logger"
 	"bitcask/utils"
 	"bufio"
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -191,4 +194,73 @@ func ExtractKeyVal(dataLine string) (string, string) {
 	key := keyVal[0]
 	val := keyVal[1]
 	return key, val
+}
+
+func ReadAllRecordsFromDataSegment(filePath string) []Record {
+	f, deferFunc := GetLogFile(filePath, os.O_RDONLY)
+	defer deferFunc(f)
+
+	var records []Record
+
+	ParseDataSegment(f, func(k string, v string, byteOffset int64) {
+		records = append(records, Record{Key: k, Val: v})
+	})
+
+	return records
+}
+
+func GetLogFile(fileName string, flag int) (*os.File, func(file *os.File)) {
+	f, err := os.OpenFile(fileName, flag, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	deferFunc := func(f *os.File) {
+		err := f.Close()
+		if err != nil && err != syscall.EBADF {
+			panic(err)
+		}
+	}
+
+	return f, deferFunc
+}
+
+func GetDataSegmentFileNameList(dataDirectory string) []string {
+	files, err := os.ReadDir(dataDirectory)
+	if err != nil {
+		panic(err)
+	}
+
+	var fileNames []string
+
+	dataFileNamePattern := "*.log"
+
+	for _, entry := range files {
+		if entry.IsDir() {
+			continue
+		}
+
+		if matched, err := filepath.Match(dataFileNamePattern, entry.Name()); err != nil {
+			panic(err)
+		} else if matched {
+			fileNames = append(fileNames, entry.Name())
+		}
+	}
+
+	return fileNames
+}
+
+func ClearDataFromDirectory(directory string) error {
+	dataFileNames := GetDataSegmentFileNameList(directory)
+
+	for _, fileName := range dataFileNames {
+		err := os.Remove(directory + "/" + fileName)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	logger.SugaredLogger.Infof("Successfully cleared all data.")
+	return nil
 }

@@ -2,7 +2,7 @@ package lsmIndex
 
 import (
 	"bitcask/config/constants"
-	"bitcask/dataIO/index/hashIndex/disk"
+	"bitcask/dataIO/dataSegment"
 	"bitcask/dataIO/index/lsmIndex/memTable"
 	"bitcask/dataIO/index/lsmIndex/ssTable"
 	"bitcask/dataIO/index/lsmIndex/ssTableWriter"
@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"sync"
 )
+
+var singletonLsmIndex *LsmIndex
 
 type LsmIndex struct {
 	primaryMemTable       *memTable.MemTable
@@ -33,6 +35,13 @@ type LsmIndex struct {
 	dataDirectory string
 
 	isInitialized bool
+}
+
+func (lsmIndex *LsmIndex) Compress() {
+}
+
+func (lsmIndex *LsmIndex) Merge() {
+	Merge()
 }
 
 func (lsmIndex *LsmIndex) Get(key string) (string, error) {
@@ -145,13 +154,13 @@ func (lsmIndex *LsmIndex) removeMemTableFromSecondaryList(memTableToRemove *memT
 }
 
 func (lsmIndex *LsmIndex) ImportData() {
-	dataSegmentFileNames := disk.GetDataSegmentFileNameList(lsmIndex.dataDirectory)
+	dataSegmentFileNames := dataSegment.GetDataSegmentFileNameList(lsmIndex.dataDirectory)
 
 	for _, fileName := range dataSegmentFileNames {
 		lsmIndex.ImportDataSegment(fileName)
 	}
 
-	walFileNames := disk.GetDataSegmentFileNameList(utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs")
+	walFileNames := dataSegment.GetDataSegmentFileNameList(utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs")
 
 	var filteredWALNames []string
 
@@ -295,19 +304,39 @@ func (lsmIndex *LsmIndex) insertNewSSTable(ssTable *ssTable.SSTable) {
 	lsmIndex.ssTableList = append(lsmIndex.ssTableList, ssTable)
 }
 
+func (lsmIndex *LsmIndex) RemoveSSTables(ssTableFileNames []string) {
+	defer utils.LockThenDefer(lsmIndex.ssTableListWriteMutex)()
+
+	var ssTables []*ssTable.SSTable
+
+	for _, ssTable_ := range lsmIndex.ssTableList {
+		if utils.Contains(ssTableFileNames, ssTable_.FileName) {
+			continue
+		}
+
+		ssTables = append(ssTables, ssTable_)
+	}
+
+	lsmIndex.ssTableList = ssTables
+}
+
 func (lsmIndex *LsmIndex) Delete(key string) error {
 	//TODO implement me
 	panic("implement me")
 }
 
-func NewLsmIndex() (*LsmIndex, error) {
-	lsmIndex := LsmIndex{
+func GetLsmIndex() *LsmIndex {
+	if singletonLsmIndex != nil {
+		return singletonLsmIndex
+	}
+
+	singletonLsmIndex = &LsmIndex{
 		primaryMemTable:       nil,
 		secondaryMemTableList: nil,
 		dataDirectory:         utils.GetDataDirectory(),
 	}
 
-	lsmIndex.Init()
+	singletonLsmIndex.Init()
 
-	return &lsmIndex, nil
+	return singletonLsmIndex
 }

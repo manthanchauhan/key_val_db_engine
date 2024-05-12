@@ -2,6 +2,7 @@ package test
 
 import (
 	"bitcask/config/constants"
+	"bitcask/dataIO/dataSegment"
 	"bitcask/utils"
 	"fmt"
 	"math/rand"
@@ -23,12 +24,12 @@ func RunTests() {
 }
 
 func ClearDataLogs() {
-	err := utils.ClearDataFromDirectory(utils.GetDataDirectory())
+	err := dataSegment.ClearDataFromDirectory(utils.GetDataDirectory())
 	if err != nil {
 		panic(err)
 	}
 
-	err = utils.ClearDataFromDirectory(utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs")
+	err = dataSegment.ClearDataFromDirectory(utils.GetDataDirectoryForIndex(constants.IndexTypeLSMIndex) + "/WALs")
 	if err != nil {
 		panic(err)
 	}
@@ -39,7 +40,7 @@ func runTests() {
 
 	startTime := time.Now()
 
-	for iterations := 0; iterations < 10000; iterations++ {
+	for iterations := 0; iterations < 100000; iterations++ {
 		randInt := rand.Int()
 
 		divisor := 4
@@ -85,6 +86,14 @@ func runTests() {
 		fmt.Printf("%s - %s\n", testName, strconv.Itoa(v))
 	}
 	println()
+
+	dataSize, err := utils.DirSize(utils.GetDataDirectory())
+
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Printf("Data size: %d bytes\n", dataSize)
+	}
 
 	println("tests completed successfully")
 }

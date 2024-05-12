@@ -2,21 +2,19 @@ package disk
 
 import (
 	"bitcask/config/constants"
-	dataSegment2 "bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/dataSegment"
 	"bitcask/logger"
-	"bitcask/utils"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
 var LatestSegmentName = ""
 
-func GetSegmentFileSize(fileName string) int64 {
-	fileStat, err := os.Stat(utils.GetDataDirectory() + "/" + fileName)
+func GetSegmentFileSize(fileName string, directory string) int64 {
+	fileStat, err := os.Stat(directory + "/" + fileName)
 	if err != nil {
 		panic(err)
 	}
@@ -24,33 +22,17 @@ func GetSegmentFileSize(fileName string) int64 {
 	return fileStat.Size()
 }
 
-func DeleteSegment(fileName string) {
+func DeleteSegment(fileName string, directory string) {
 	if fileName == LatestSegmentName {
 		panic("Deleting latest segment")
 	}
 
 	logger.SugaredLogger.Infof("Removing file %s after compress & merge", fileName)
 
-	err := os.Remove(utils.GetDataDirectory() + "/" + fileName)
+	err := os.Remove(directory + "/" + fileName)
 	if err != nil {
 		panic(err)
 	}
-}
-
-func GetLogFile(fileName string, flag int) (*os.File, func(file *os.File)) {
-	f, err := os.OpenFile(fileName, flag, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	deferFunc := func(f *os.File) {
-		err := f.Close()
-		if err != nil && err != syscall.EBADF {
-			panic(err)
-		}
-	}
-
-	return f, deferFunc
 }
 
 func ExtractFileNameAndOffset(dataLocation string) (string, int64) {
@@ -73,7 +55,7 @@ func CreateNewDataSegmentInDirectory(dataDirectory string) string {
 		panic(err)
 	}
 
-	segmentMetaData := dataSegment2.MetaDataDto{CreatedAt: time.Now()}
+	segmentMetaData := dataSegment.MetaDataDto{CreatedAt: time.Now()}
 	byteArr := segmentMetaData.ToByteArr()
 
 	if _, err := file.Write(byteArr); err != nil {
@@ -88,32 +70,9 @@ func CreateNewDataSegmentInDirectory(dataDirectory string) string {
 	return fileName
 }
 
-func CreateNewDataSegment() string {
-	return CreateNewDataSegmentInDirectory(utils.GetDataDirectory())
-}
-
-func GetDataSegmentFileNameList(dataDirectory string) []string {
-	entries, err := os.ReadDir(dataDirectory)
-	if err != nil {
-		panic(err)
-	}
-
-	var fileNames []string
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-
-		fileNames = append(fileNames, entry.Name())
-	}
-
-	return fileNames
-}
-
 func ParseDataSegment(fileName string, directory string, exec func(k string, v string, byteOffset int64)) {
-	f, deferFunc := GetLogFile(directory+"/"+fileName, os.O_RDONLY)
+	f, deferFunc := dataSegment.GetLogFile(directory+"/"+fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
-	dataSegment2.ParseDataSegment(f, exec)
+	dataSegment.ParseDataSegment(f, exec)
 }

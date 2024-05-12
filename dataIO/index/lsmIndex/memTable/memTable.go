@@ -2,7 +2,7 @@ package memTable
 
 import (
 	"bitcask/config/constants"
-	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/dataSegment"
 	"bitcask/dataIO/index/hashIndex/disk"
 	"bitcask/logger"
 	"bitcask/utils"
@@ -52,7 +52,7 @@ func (memTable *MemTable) put(key string, val string) error {
 }
 
 func (memTable *MemTable) writeWAL(key string, val string) error {
-	f, deferFunc := disk.GetLogFile(memTable.walDirectory+"/"+memTable.WalFileName, os.O_APPEND|os.O_WRONLY)
+	f, deferFunc := dataSegment.GetLogFile(memTable.walDirectory+"/"+memTable.WalFileName, os.O_APPEND|os.O_WRONLY)
 	defer deferFunc(f)
 
 	dataSegment.Write(key, val, f)

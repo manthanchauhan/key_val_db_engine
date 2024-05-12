@@ -2,7 +2,7 @@ package hashIndex
 
 import (
 	"bitcask/config/constants"
-	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/dataSegment"
 	"bitcask/dataIO/index/hashIndex/disk"
 	"bitcask/utils"
 	"errors"
@@ -35,6 +35,14 @@ type HashIndex struct {
 	hashMapMutex *sync.RWMutex
 
 	diskManager *disk.HashIndexDiskManager
+}
+
+func (h *HashIndex) Compress() {
+	Compress()
+}
+
+func (h *HashIndex) Merge() {
+	Merge()
 }
 
 func (h *HashIndex) Get(key string) (string, error) {

@@ -2,7 +2,7 @@ package ssTable
 
 import (
 	"bitcask/config/constants"
-	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/dataSegment"
 	"bitcask/dataIO/index/hashIndex/disk"
 	"bitcask/dataIO/index/lsmIndex/memTable"
 	"bitcask/logger"
@@ -70,7 +70,7 @@ func findJustLessThanEqualString(orderedList []string, key string) string {
 }
 
 func (s *SSTable) getValueFromBlock(key string, blockOffset int64) (*string, error) {
-	f, deferFunc := disk.GetLogFile(s.Directory+"/"+s.FileName, os.O_RDONLY)
+	f, deferFunc := dataSegment.GetLogFile(s.Directory+"/"+s.FileName, os.O_RDONLY)
 	defer deferFunc(f)
 
 	scanner := dataSegment.GetDataLogScanner(f, &blockOffset)
@@ -122,7 +122,7 @@ func NewSSTableFromMemTable(memTable *memTable.MemTable, directory string) (*SST
 
 	kvPairs := memTable.GetKeyValPairs()
 
-	f, deferFunc := disk.GetLogFile(ssTable.Directory+"/"+ssTable.FileName, os.O_WRONLY|os.O_APPEND)
+	f, deferFunc := dataSegment.GetLogFile(ssTable.Directory+"/"+ssTable.FileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
 	dataSegment.WriteMany(kvPairs, f)

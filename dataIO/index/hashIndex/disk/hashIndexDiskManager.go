@@ -2,7 +2,7 @@ package disk
 
 import (
 	"bitcask/config/constants"
-	"bitcask/dataIO/index/hashIndex/dataSegment"
+	dataSegment2 "bitcask/dataIO/dataSegment"
 	"bitcask/utils"
 	"fmt"
 	"os"
@@ -74,7 +74,7 @@ func (h *HashIndexDiskManager) writeInDataSegment(key string, val string, fileNa
 	f, deferFunc := h.GetLogFile(fileName, os.O_APPEND|os.O_WRONLY)
 	defer deferFunc(f)
 
-	dataSegmentObj := dataSegment.DataSegment{Fdr: f}
+	dataSegmentObj := dataSegment2.DataSegment{Fdr: f}
 	byteCount := dataSegmentObj.Write(key, val)
 
 	fileSize := h.getSegmentFileSize(fileName)
@@ -98,7 +98,7 @@ func (h *HashIndexDiskManager) getDataLocationFromByteOffset(segmentFileName str
 }
 
 func (h *HashIndexDiskManager) createNextDataSegment() {
-	dataSegmentFactory := dataSegment.GetDataSegmentFactory()
+	dataSegmentFactory := dataSegment2.GetDataSegmentFactory()
 	latestSegmentFileName := dataSegmentFactory.CreateDataSegment()
 	h.latestSegmentName = latestSegmentFileName
 }
@@ -107,7 +107,7 @@ func (h *HashIndexDiskManager) parseDataSegment(fileName string, exec func(k str
 	f, deferFunc := h.GetLogFile(fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
-	dataSegmentObj := dataSegment.DataSegment{Fdr: f}
+	dataSegmentObj := dataSegment2.DataSegment{Fdr: f}
 	dataSegmentObj.Parse(exec)
 }
 
@@ -153,7 +153,7 @@ func (h *HashIndexDiskManager) GetCreatedAtFromSegmentFileName(fileName string) 
 
 	defer deferFunc(f)
 
-	return (&dataSegment.DataSegment{Fdr: f}).GetSegmentFileCreatedAt()
+	return (&dataSegment2.DataSegment{Fdr: f}).GetSegmentFileCreatedAt()
 }
 
 func (h *HashIndexDiskManager) Init() {
@@ -164,5 +164,5 @@ func (h *HashIndexDiskManager) ParseDataSegment(fileName string, exec func(k str
 	f, deferFunc := h.GetLogFile(fileName, os.O_RDONLY)
 	defer deferFunc(f)
 
-	(&dataSegment.DataSegment{Fdr: f}).Parse(exec)
+	(&dataSegment2.DataSegment{Fdr: f}).Parse(exec)
 }

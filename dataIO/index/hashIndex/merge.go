@@ -1,17 +1,17 @@
-package compressAndMerge
+package hashIndex
 
 import (
 	"bitcask/config/constants"
-	"bitcask/dataIO/index/hashIndex"
-	"bitcask/dataIO/index/hashIndex/dataSegment"
+	"bitcask/dataIO/dataSegment"
 	"bitcask/dataIO/index/hashIndex/disk"
+	utils2 "bitcask/dataIO/index/hashIndex/utils"
 	"bitcask/logger"
 	"bitcask/utils"
 	"os"
 )
 
-func merge() {
-	fileNames := getReadOnlySegmentFileNames()
+func Merge() {
+	fileNames := utils2.GetReadOnlySegmentFileNames()
 
 	if len(fileNames) < 2 {
 		return
@@ -25,7 +25,7 @@ func merge() {
 		var mergedSegmentSize int64 = 0
 
 		for j = i + 1; j <= len(fileNames) && mergedSegmentSize < constants.LogFileMaxSizeBytes; j++ {
-			mergedSegmentSize += disk.GetSegmentFileSize(fileNames[j-1])
+			mergedSegmentSize += disk.GetSegmentFileSize(fileNames[j-1], utils.GetDataDirectoryForIndex(constants.IndexTypeHashIndex))
 		}
 
 		if mergedSegmentSize > constants.LogFileMaxSizeBytes {
@@ -35,7 +35,7 @@ func merge() {
 		}
 
 		mergedSegmentFileName := mergeSegments(fileNames[start:end])
-		hashIndex.GetHashIndex().ImportDataSegment(mergedSegmentFileName, hashMapImportSegmentInitValCheckForMerging(fileNames[start:end]))
+		GetHashIndex().ImportDataSegment(mergedSegmentFileName, hashMapImportSegmentInitValCheckForMerging(fileNames[start:end]))
 
 		deleteSegments(fileNames[start:end])
 
@@ -44,9 +44,11 @@ func merge() {
 }
 
 func mergeSegments(fileNames []string) string {
-	newFileName := disk.CreateNewDataSegment()
+	dataDirectory := utils.GetDataDirectoryForIndex(constants.IndexTypeHashIndex)
 
-	f, deferFunc := disk.GetLogFile(utils.GetDataDirectory()+"/"+newFileName, os.O_WRONLY|os.O_APPEND)
+	newFileName := disk.CreateNewDataSegmentInDirectory(dataDirectory)
+
+	f, deferFunc := dataSegment.GetLogFile(dataDirectory+"/"+newFileName, os.O_WRONLY|os.O_APPEND)
 	defer deferFunc(f)
 
 	execFunc := func(k string, v string, byteOffset int64) {
@@ -54,22 +56,24 @@ func mergeSegments(fileNames []string) string {
 	}
 
 	for _, fileName := range fileNames {
-		disk.ParseDataSegment(fileName, utils.GetDataDirectory(), execFunc)
+		disk.ParseDataSegment(fileName, dataDirectory, execFunc)
 	}
 
 	return newFileName
 }
 
 func deleteSegments(fileNames []string) {
+	dataDirectory := utils.GetDataDirectoryForIndex(constants.IndexTypeHashIndex)
+
 	for _, fileName := range fileNames {
-		disk.DeleteSegment(fileName)
-		logger.SugaredLogger.Infof("Deleting %s", fileName)
+		disk.DeleteSegment(fileName, dataDirectory)
+		logger.SugaredLogger.Infof("Deleting %s/%s", dataDirectory, fileName)
 	}
 }
 
 func hashMapImportSegmentInitValCheckForMerging(mergedFileNames []string) func(k string) bool {
 	return func(k string) bool {
-		val, ok := hashIndex.GetHashIndex().GetDataLocation(k)
+		val, ok := GetHashIndex().GetDataLocation(k)
 
 		if !ok {
 			return false

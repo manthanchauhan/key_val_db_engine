@@ -1,8 +1,8 @@
 package compressAndMerge
 
 import (
-	"bitcask/dataIO/index/hashIndex/disk"
-	"bitcask/utils"
+	"bitcask/dataIO"
+	"errors"
 	"io/fs"
 	"syscall"
 	"time"
@@ -22,7 +22,7 @@ func CompressionAndMergingGoRoutine() {
 func compressAndMerge() {
 	defer func() {
 		if r := recover(); r != nil {
-			if err, ok := r.(*fs.PathError); ok && err.Err == syscall.ENOENT {
+			if err, ok := r.(*fs.PathError); ok && errors.Is(err.Err, syscall.ENOENT) {
 				return
 			} else {
 				panic(r)
@@ -30,21 +30,6 @@ func compressAndMerge() {
 		}
 	}()
 
-	compress()
-	merge()
-}
-
-func getReadOnlySegmentFileNames() []string {
-	segmentFileNames := disk.GetDataSegmentFileNameList(utils.GetDataDirectory())
-	readOnlySegmentFileNames := make([]string, len(segmentFileNames))
-	i := 0
-
-	for _, fileName := range segmentFileNames {
-		if fileName != disk.LatestSegmentName {
-			readOnlySegmentFileNames[i] = fileName
-			i += 1
-		}
-	}
-
-	return readOnlySegmentFileNames[:i]
+	dataIOManager := dataIO.GetDataIOManager()
+	dataIOManager.CompressAndMerge()
 }

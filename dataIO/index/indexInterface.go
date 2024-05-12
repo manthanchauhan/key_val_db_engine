@@ -7,4 +7,6 @@ type Index interface {
 	Init()
 	ImportData()
 	GetDataDirectory() string
+	Compress()
+	Merge()
 }

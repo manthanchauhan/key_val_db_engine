@@ -59,3 +59,8 @@ func (m *Manager) DeleteHandler(key string) {
 
 	logger.SugaredLogger.Info("Deleted")
 }
+
+func (m *Manager) CompressAndMerge() {
+	m.index.Compress()
+	m.index.Merge()
+}
