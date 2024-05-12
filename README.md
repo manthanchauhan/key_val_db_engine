@@ -24,7 +24,7 @@ Sparse Index search - `Binary Search`
 Tests count - `10,000`  
 
 Tests took `30.6950765s`  
-Data size `454.507 kb`
+Data size `465.564 KB`
 
 READ NEW - 2490  
 WRITE NEW - 2461  
@@ -38,7 +38,7 @@ Sparse Index search - `Binary Search`
 Tests count - `10,000`  
 
 Tests took `37.880961042s`  
-Data size `465.564 kb`
+Data size `454.507 KB`
 
 READ NEW - 2489  
 WRITE NEW - 2570  
@@ -51,10 +51,10 @@ Sparse Index size - `100 Keys`
 Sparse Index search - `Binary Search`  
 Tests count - `1,00,000`
 
-Tests took `37.880961042s`  
-Data size `465.564 kb`
+Tests took `42m11.224302333s`  
+Data size `4.689296 MB`
 
-READ NEW - 2489  
-WRITE NEW - 2570  
-READ OLD - 2450  
-WRITE OLD - 2491  
+READ NEW - 25036  
+WRITE NEW - 24905  
+WRITE OLD - 25027  
+READ OLD - 25032  
