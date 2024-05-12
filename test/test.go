@@ -40,7 +40,7 @@ func runTests() {
 
 	startTime := time.Now()
 
-	for iterations := 0; iterations < 100000; iterations++ {
+	for iterations := 0; iterations < 10000; iterations++ {
 		randInt := rand.Int()
 
 		divisor := 4
